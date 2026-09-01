@@ -1,0 +1,303 @@
+{% extends "accounts/base.html" %}
+{% block title %}SmartJobs - Notifications Hub{% endblock %}
+
+{% block content %}
+<div class="notif-wrapper">
+    <!-- Header Section -->
+    <div class="card notif-header-card">
+        <div class="header-content">
+            <div>
+                <h2>🔔 Notifications</h2>
+                <p class="page-subtitle">Stay updated with your professional activities and network.</p>
+            </div>
+            <div>
+                <a href="{% url 'notifications:mark_all_as_read' %}" class="btn-secondary-custom">Mark all as read</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Feed Container -->
+    <div class="card notif-main-card">
+        {% for notif in notifications %}
+            <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+                
+                <!-- Left Icon Based on Context -->
+                <div class="notif-icon-box">
+                    {% if "like" in notif.title|lower %}❤️
+                    {% elif "comment" in notif.title|lower %}💬
+                    {% elif "connection" in notif.title|lower or "request" in notif.title|lower %}🤝
+                    {% elif "profile" in notif.title|lower %}👀
+                    {% elif "application" in notif.title|lower or "job" in notif.title|lower %}💼
+                    {% else %}🔔{% endif %}
+                </div>
+
+                <!-- Center Text Content -->
+                <div class="notif-content">
+                    <div class="notif-title">{{ notif.title }}</div>
+                    <div class="notif-message">{{ notif.message }}</div>
+                    <div class="notif-meta">
+                        <span>{{ notif.created_at|timesince }} ago</span>
+                        <span>•</span>
+                        <span class="channel-badge">{{ notif.channel }}</span>
+                    </div>
+                </div>
+
+                <!-- Right Action Buttons / Status -->
+                <div class="notif-actions">
+                {% if "connection" in notif.title|lower or "request" in notif.title|lower %}
+                    {% if notif.connection_status == 'accepted' %}
+                        <span class="status-pill success">Connected ✓</span>
+                    {% elif notif.connection_status == 'pending' and notif.sender %}
+                        <a href="{% url 'notifications:accept_connection' notif.pk %}" class="btn-primary-custom">Accept</a>
+                        <a href="{% url 'notifications:reject_connection' notif.pk %}" class="btn-danger-outline">Ignore</a>
+                    {% else %}
+                        <span class="status-pill text-muted-custom">Resolved</span>
+                    {% endif %}
+                {% else %}
+                    {% if not notif.is_read %}
+                        <a href="{% url 'notifications:mark_as_read' notif.pk %}" class="btn-outline-custom">Mark Read</a>
+                    {% else %}
+                        <span class="status-pill text-muted-custom">Read</span>
+                    {% endif %}
+                {% endif %}
+                </div>
+
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>No notifications right now!</h3>
+                <p>When people interact with your profile or posts, you'll see it here.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-color: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --radius: 10px;
+        --shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    body { background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    .notif-wrapper {
+        max-width: 760px;
+        margin: 28px auto;
+        padding: 0 16px;
+    }
+
+    .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+    }
+
+    .notif-header-card {
+        padding: 20px 24px;
+        margin-bottom: 16px;
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notif-header-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin: 0 0 4px 0;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    .notif-main-card {
+        overflow: hidden;
+    }
+
+    .notif-item {
+        padding: 18px 24px;
+        transition: background 0.15s ease-in-out;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+    }
+
+    .notif-item:last-child {
+        border-bottom: none;
+    }
+
+    .notif-item.unread {
+        background-color: #f8fbff;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .notif-item:hover {
+        background-color: #fafafa;
+    }
+
+    .notif-icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3f2ef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .notif-content {
+        flex-grow: 1;
+    }
+
+    .notif-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 4px;
+    }
+
+    .notif-message {
+        font-size: 13px;
+        color: #444;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .notif-meta {
+        font-size: 11px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .channel-badge {
+        background: #f3f2ef;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #555;
+    }
+
+    .notif-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    /* Buttons & Badges styling */
+    .btn-primary-custom {
+        background: var(--primary-color);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .btn-primary-custom:hover {
+        background: var(--primary-hover);
+    }
+
+    .btn-secondary-custom {
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        background: transparent;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .btn-secondary-custom:hover {
+        background: #f3f2ef;
+    }
+
+    .btn-outline-custom {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .btn-outline-custom:hover {
+        background: #e8f0fe;
+    }
+
+    .btn-danger-outline {
+        border: 1px solid #d93025;
+        color: #d93025;
+        background: transparent;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .btn-danger-outline:hover {
+        background: #fce8e6;
+    }
+
+    .status-pill {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+    }
+    .status-pill.success {
+        color: #137333;
+    }
+    .status-pill.text-muted-custom {
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+    }
+
+    .empty-icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+    }
+
+    .empty-state h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: var(--text-color);
+    }
+
+    .empty-state p {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+</style>
+{% endblock %}

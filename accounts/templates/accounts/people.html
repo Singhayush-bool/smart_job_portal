@@ -1,0 +1,254 @@
+{% extends "accounts/base.html" %}
+{% load ad_tags %}
+
+{% block title %}Candidates & People - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="home-layout">
+
+    <!-- ========================= -->
+    <!-- LEFT SIDEBAR (COMPACT PROFILE) -->
+    <!-- ========================= -->
+    <aside class="left-sidebar">
+        <div class="card profile-card">
+            <div class="profile-banner"></div>
+            <div class="profile-avatar-wrapper">
+                {% if request.user.job_seeker_profile.profile_image %}
+                    <img src="{{ request.user.job_seeker_profile.profile_image.url }}" class="profile-image" alt="Profile">
+                {% else %}
+                    <div class="profile-placeholder">{{ request.user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="profile-info">
+                <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                <p class="username">@{{ request.user.username }}</p>
+                <a href="{% url 'accounts:profile' %}" class="btn-secondary">View Profile</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT (SEARCH & DIRECTORY) -->
+    <!-- ========================= -->
+    <section class="feed-section">
+
+        <!-- PAGE HEADER -->
+        <div class="card feed-header-card">
+            <h2>
+                {% if request.user.role == 'EMPLOYER' or request.user.user_type == 'employer' %}
+                    Candidate Directory
+                {% else %}
+                    Discover Professionals
+                {% endif %}
+            </h2>
+            <p>
+                {% if request.user.role == 'EMPLOYER' or request.user.user_type == 'employer' %}
+                    Find top talent, search candidates by skills, and recruit the right professionals.
+                {% else %}
+                    Expand your professional network and connect with peers across industries.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- SEARCH & FILTERS FORM -->
+        <div class="card search-filter-card">
+            <form method="GET" class="filter-grid-form">
+                <div class="filter-row">
+                    <input type="text" name="q" placeholder="Name or username..." value="{{ search_query|default:'' }}" class="filter-input">
+                    <input type="text" name="skill" placeholder="Skill (Python, React)..." value="{{ skill_filter|default:'' }}" class="filter-input">
+                    <input type="text" name="location" placeholder="Location..." value="{{ location_filter|default:'' }}" class="filter-input">
+                </div>
+
+                <div class="filter-row-secondary">
+                    <button type="submit" class="btn-primary">Search Candidates</button>
+                    <a href="{% url 'accounts:people' %}" class="btn-reset">Reset Search</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- PEOPLE / CANDIDATES GRID -->
+        <div class="people-grid">
+            {% for person in people %}
+                <div class="card person-card">
+                    <div class="person-card-top">
+                        <div class="avatar-circle">
+                            {% if person.profile_picture %}
+                                <img src="{{ person.profile_picture.url }}" alt="{{ person.username }}" class="avatar-img">
+                            {% else %}
+                                {{ person.username|first|upper }}
+                            {% endif %}
+                        </div>
+
+                        <div class="person-info">
+                            <h3>
+                                <a href="{% url 'accounts:user_profile' person.id %}" class="person-link">
+                                    {{ person.get_full_name|default:person.username }}
+                                </a>
+                            </h3>
+                            <p class="user-handle">@{{ person.username }}</p>
+                            
+                            {% if person.headline or person.role %}
+                                <p class="person-headline">
+                                    💼 {{ person.headline|default:person.role|title }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if person.location %}
+                                <p class="person-location">📍 {{ person.location }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if person.id != request.user.id %}
+                        <div class="card-actions">
+                            <a href="{% url 'accounts:user_profile' person.id %}" class="btn-primary-sm">View Profile</a>
+                            <a href="{% url 'accounts:send_connection' person.id %}" class="btn-secondary-sm">Connect</a>
+                            
+                            {% if not request.user.role == 'EMPLOYER' %}
+                                {% if person.is_following %}
+                                    <a href="{% url 'accounts:toggle_follow' person.id %}" class="btn-outline-sm active-following">Following</a>
+                                {% else %}
+                                    <a href="{% url 'accounts:toggle_follow' person.id %}" class="btn-outline-sm">Follow</a>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="card empty-state">
+                    <div class="empty-icon">👥</div>
+                    <h3>No Profiles Found</h3>
+                    <p>Try modifying your search criteria or check back later.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RIGHT SIDEBAR (ADS / SUGGESTIONS) -->
+    <!-- ========================= -->
+    <aside class="right-sidebar">
+        {% if request.user.role != "EMPLOYER" and not request.user.is_superuser %}
+            <div class="card suggestion-card ai-feature-card">
+                <h3>🤖 AI Resume Matcher</h3>
+                <p class="suggestion-desc">Check ATS match score & missing skills against job descriptions.</p>
+                <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="btn-ai-sm">Scan Resume →</a>
+            </div>
+        {% endif %}
+
+        {% render_ad 'sidebar' %}
+
+        <div class="card suggestion-card">
+            <h3>📰 Career Insights</h3>
+            <p class="suggestion-desc">Read interview tips, resume guides, and industry trends.</p>
+            <a href="{% url 'cms:blog_list' %}" class="link-btn">Read Blogs →</a>
+        </div>
+    </aside>
+
+</div>
+
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-color: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --radius: 12px;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    body { background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    .home-layout { 
+        display: grid; 
+        grid-template-columns: 260px 1fr 280px; 
+        gap: 24px; 
+        max-width: 1250px; 
+        margin: 25px auto; 
+        padding: 0 15px; 
+        align-items: start; 
+    }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    .left-sidebar, .right-sidebar { position: sticky; top: 76px; }
+
+    /* Profile Card */
+    .profile-card { text-align: center; position: relative; }
+    .profile-banner { height: 50px; background: linear-gradient(135deg, var(--primary-color), #00a0dc); }
+    .profile-avatar-wrapper { margin-top: -30px; margin-bottom: 8px; }
+    .profile-image, .profile-placeholder { width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; margin: 0 auto; box-shadow: var(--shadow); }
+    .profile-image { object-fit: cover; }
+    .profile-placeholder { background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 22px; }
+    .profile-info { padding: 0 12px 12px; }
+    .profile-info h2 { font-size: 15px; font-weight: 600; margin: 0; }
+    .profile-info .username { color: var(--text-muted); font-size: 12px; margin: 2px 0 10px; }
+
+    /* Feed Header */
+    .feed-header-card { padding: 18px 20px; }
+    .feed-header-card h2 { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
+    .feed-header-card p { margin: 0; color: var(--text-muted); font-size: 13px; }
+
+    /* Search & Filter Top Card */
+    .search-filter-card { padding: 16px; margin-bottom: 16px; }
+    .filter-grid-form { display: flex; flex-direction: column; gap: 12px; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .filter-row-secondary { display: flex; align-items: center; gap: 12px; }
+    
+    .filter-input { width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+    .filter-input:focus { border-color: var(--primary-color); }
+    
+    .btn-reset { color: var(--text-muted); font-size: 13px; font-weight: 600; text-decoration: none; padding: 6px 12px; }
+    .btn-reset:hover { text-decoration: underline; color: var(--text-color); }
+
+    /* People Grid */
+    .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+    .person-card { display: flex; flex-direction: column; justify-content: space-between; padding: 20px; margin-bottom: 0; text-align: left; }
+    .person-card-top { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+
+    .avatar-circle { width: 52px; height: 52px; background: var(--primary-color); color: white; border-radius: 50%; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .person-info { overflow: hidden; }
+    .person-info h3 { font-size: 15px; font-weight: 700; margin: 0 0 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .person-link { color: var(--text-color); text-decoration: none; }
+    .person-link:hover { color: var(--primary-color); text-decoration: underline; }
+    .user-handle { font-size: 12px; color: var(--text-muted); margin: 0 0 6px 0; }
+    .person-headline { font-size: 12px; font-weight: 500; color: #333; margin: 0 0 4px 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .person-location { font-size: 11px; color: var(--text-muted); margin: 0; }
+
+    .card-actions { display: flex; gap: 6px; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px; width: 100%; }
+    .btn-primary-sm { background: var(--primary-color); color: white; padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; text-decoration: none; text-align: center; flex: 1; }
+    .btn-secondary-sm { background: #e8f0fe; color: var(--primary-color); padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; text-decoration: none; text-align: center; flex: 1; }
+    .btn-outline-sm { border: 1px solid var(--border-color); color: var(--text-muted); padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; text-decoration: none; text-align: center; }
+    .active-following { background: #e8f0fe; color: var(--primary-color); border-color: var(--primary-color); }
+
+    /* Buttons & Sidebars */
+    .btn-primary { background: var(--primary-color); color: white; border: none; padding: 7px 16px; font-size: 12px; font-weight: 600; border-radius: 20px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-secondary { border: 1px solid var(--primary-color); color: var(--primary-color); padding: 4px 14px; font-size: 12px; font-weight: 600; border-radius: 20px; text-decoration: none; display: inline-block; }
+    .btn-ai-sm { background: #6b21a8; color: #ffffff; border: none; padding: 6px 14px; font-size: 12px; border-radius: 20px; font-weight: 600; text-decoration: none; display: inline-block; }
+
+    .suggestion-card { padding: 16px; }
+    .suggestion-card h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+    .suggestion-desc { color: var(--text-muted); font-size: 12px; margin: 0 0 10px; }
+    .ai-feature-card { background: #f3e8ff; border-color: #d8b4fe; }
+    .link-btn { color: var(--primary-color); text-decoration: none; font-size: 13px; font-weight: 600; }
+    .link-btn:hover { text-decoration: underline; }
+    .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+    @media (max-width: 992px) { 
+        .home-layout { grid-template-columns: 220px 1fr; } 
+        .right-sidebar { display: none; } 
+    }
+    @media (max-width: 768px) {
+        .filter-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 688px) { 
+        .home-layout { display: block; } 
+        .left-sidebar { position: static; } 
+    }
+</style>
+{% endblock %}

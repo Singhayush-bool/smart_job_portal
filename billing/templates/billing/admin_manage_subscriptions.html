@@ -1,0 +1,157 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+
+{% block title %}Manage Subscriptions & Coupons - SmartJobs{% endblock %}
+
+{% block content %}
+<style>
+    /* Pro-Level SaaS Dashboard Styles */
+    .saas-wrapper { max-width: 1280px; margin: 0 auto; padding: 30px 20px; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .saas-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+    .saas-header h1 { font-size: 24px; font-weight: 700; color: #111827; letter-spacing: -0.025em; }
+    .saas-header p { font-size: 14px; color: #6b7280; margin-top: 4px; }
+    
+    .btn-group { display: flex; gap: 12px; }
+    .btn-primary { background: #2563eb; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: inline-block; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #059669; color: white; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 600; text-decoration: none; transition: background 0.2s; display: inline-block; }
+    .btn-success:hover { background: #047857; }
+
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02); margin-bottom: 30px; overflow: hidden; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
+    .card-header h2 { font-size: 16px; font-weight: 600; color: #374151; }
+    .badge-sub { background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #bfdbfe; }
+    .badge-promo { background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid #a7f3d0; }
+
+    .table-container { width: 100%; overflow-x: auto; }
+    .pro-table { width: 100%; border-collapse: collapse; text-align: left; white-space: nowrap; }
+    .pro-table th { background: #f9fafb; padding: 14px 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #6b7280; letter-spacing: 0.05em; border-bottom: 1px solid #e5e7eb; }
+    .pro-table td { padding: 16px 20px; font-size: 14px; color: #1f2937; border-bottom: 1px solid #f3f4f6; }
+    .pro-table tr:last-child td { border-bottom: none; }
+    .pro-table tr:hover { background: #f9fafb; }
+
+    .status-active { background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    .status-inactive { background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+    
+    .action-edit { color: #2563eb; background: #eff6ff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; margin-right: 6px; transition: 0.2s; display: inline-block; }
+    .action-edit:hover { background: #dbeafe; }
+    .action-delete { color: #dc2626; background: #fef2f2; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: 0.2s; display: inline-block; }
+    .action-delete:hover { background: #fee2e2; }
+    
+    .empty-row { text-align: center; padding: 40px; color: #9ca3af; font-size: 14px; }
+</style>
+
+<div class="saas-wrapper">
+    
+    <!-- Header Section -->
+    <div class="saas-header">
+        <div>
+            <h1>Manage Subscriptions & Coupons</h1>
+            <p>Oversee pricing tiers, feature limits, and promotional discount coupons seamlessly.</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'admin:billing_subscriptionplan_add' %}" target="_blank" class="btn-primary">+ Add New Plan</a>
+            <a href="{% url 'admin:billing_coupon_add' %}" target="_blank" class="btn-success">+ Create Coupon</a>
+        </div>
+    </div>
+
+    <!-- Subscription Plans Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Subscription Plans</h2>
+            <span class="badge-sub">Active Tiers</span>
+        </div>
+        <div class="table-container">
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>Plan Name</th>
+                        <th>Price</th>
+                        <th>Job Posts Limit</th>
+                        <th>Resume Downloads</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if plans %}
+                        {% for plan in plans %}
+                        <tr>
+                            <td style="font-weight: 600; color: #111827;">{{ plan.name }}</td>
+                            <td style="font-weight: 700; color: #059669;">₹{{ plan.price }}</td>
+                            <td>{{ plan.job_post_limit }}</td>
+                            <td>{{ plan.resume_download_limit }}</td>
+                            <td>
+                                {% if plan.is_active %}
+                                    <span class="status-active">Active</span>
+                                {% else %}
+                                    <span class="status-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{% url 'admin:billing_subscriptionplan_change' plan.id %}" target="_blank" class="action-edit">Edit</a>
+                                <a href="{% url 'admin:billing_subscriptionplan_delete' plan.id %}" target="_blank" class="action-delete">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-row">No subscription plans found in the database.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Discount Coupons Card -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Discount Coupons</h2>
+            <span class="badge-promo">Promotions</span>
+        </div>
+        <div class="table-container">
+            <table class="pro-table">
+                <thead>
+                    <tr>
+                        <th>Coupon Code</th>
+                        <th>Discount</th>
+                        <th>Max Uses</th>
+                        <th>Used Count</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if coupons %}
+                        {% for coupon in coupons %}
+                        <tr>
+                            <td style="font-family: monospace; font-weight: 700; color: #111827;">{{ coupon.code }}</td>
+                            <td style="font-weight: 600; color: #2563eb;">{{ coupon.discount_percent }}% OFF</td>
+                            <td>{{ coupon.max_uses }}</td>
+                            <td>{{ coupon.used_count }}</td>
+                            <td>
+                                {% if coupon.active %}
+                                    <span class="status-active">Active</span>
+                                {% else %}
+                                    <span class="status-inactive">Expired</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align: right;">
+                                <a href="{% url 'admin:billing_coupon_change' coupon.id %}" target="_blank" class="action-edit">Edit</a>
+                                <a href="{% url 'admin:billing_coupon_delete' coupon.id %}" target="_blank" class="action-delete">Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-row">No discount coupons found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

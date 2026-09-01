@@ -1,0 +1,154 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ profile_user.username }} - Profile{% endblock %}
+
+{% block content %}
+<div class="user-profile-container">
+
+    <!-- HEADER PROFILE -->
+    <div class="card profile-header-card">
+        <div class="avatar-large">
+            {% if profile and profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ profile_user.username }}" class="avatar-img-large">
+            {% else %}
+                {{ profile_user.username|first|upper }}
+            {% endif %}
+        </div>
+
+        <h1 class="user-fullname">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+        <p class="user-handle">@{{ profile_user.username }}</p>
+
+        {% if profile %}
+            <p class="user-location">📍 {{ profile.location|default:"Location not added" }}</p>
+            <p class="user-bio-short">{{ profile.bio }}</p>
+        {% endif %}
+
+        <div class="stats-counter">
+            <span><strong>{{ followers_count }}</strong> Followers</span>
+            <span><strong>{{ following_count }}</strong> Following</span>
+            <span><strong>{{ connections|length }}</strong> Connections</span>
+        </div>
+
+        <!-- ACTIONS -->
+        {% if profile_user.id != request.user.id %}
+            <div class="profile-actions-bar">
+                {% if is_following %}
+                    <a href="{% url 'accounts:toggle_follow' profile_user.id %}" class="btn-following">✓ Following</a>
+                {% else %}
+                    <a href="{% url 'accounts:toggle_follow' profile_user.id %}" class="btn-follow">+ Follow</a>
+                {% endif %}
+
+                {% if connection and connection.status == "accepted" or reverse_connection and reverse_connection.status == "accepted" %}
+                    <span class="pill-connected">🤝 Connected</span>
+                {% elif connection and connection.status == "pending" %}
+                    <span class="pill-pending">⏳ Request Pending</span>
+                {% elif reverse_connection and reverse_connection.status == "pending" %}
+                    <a href="{% url 'accounts:accept_connection' reverse_connection.id %}" class="btn-accept">✅ Accept Request</a>
+                {% else %}
+                   <a href="{% url 'accounts:send_connection' profile_user.id %}" class="btn-connect">🤝 Connect</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ABOUT SECTION -->
+    {% if profile %}
+    <div class="card section-card">
+        <h2>About</h2>
+        <p class="section-body">{{ profile.bio|default:"No bio added yet." }}</p>
+    </div>
+    {% endif %}
+
+    <!-- EDUCATION SECTION -->
+    <div class="card section-card">
+        <h2>Education</h2>
+        <div class="items-list">
+            {% if profile and profile.education.all %}
+                {% for education in profile.education.all %}
+                    <div class="item-block">
+                        <h3>{{ education.degree }}</h3>
+                        <p class="institution">{{ education.institution }}</p>
+                        <p class="dates">{{ education.start_year }} - {{ education.end_year|default:"Present" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-text">No education details added.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- EXPERIENCE SECTION -->
+    <div class="card section-card">
+        <h2>Experience</h2>
+        <div class="items-list">
+            {% if profile and profile.experiences.all %}
+                {% for experience in profile.experiences.all %}
+                    <div class="item-block">
+                        <h3>{{ experience.job_title }}</h3>
+                        <p class="company">{{ experience.company_name }}</p>
+                        <p class="dates">{{ experience.start_date }} - {% if experience.is_current %}Present{% else %}{{ experience.end_date }}{% endif %}</p>
+                        <p class="description">{{ experience.description }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="empty-text">No work experience details added.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SKILLS SECTION -->
+    <div class="card section-card">
+        <h2>Skills</h2>
+        <div class="skills-flex">
+            {% if profile and profile.skills.all %}
+                {% for item in profile.skills.all %}
+                    <span class="skill-badge">{{ item.skill.name }}</span>
+                {% endfor %}
+            {% else %}
+                <p class="empty-text">No skills added.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .user-profile-container { max-width: 850px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+    .profile-header-card { text-align: center; display: flex; flex-direction: column; align-items: center; }
+    .avatar-large { width: 80px; height: 80px; background: #0a66c2; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; margin-bottom: 12px; overflow: hidden; }
+    .avatar-img-large { width: 100%; height: 100%; object-fit: cover; }
+
+    .user-fullname { font-size: 24px; font-weight: 800; margin: 0 0 4px 0; }
+    .user-handle { font-size: 14px; color: #666; margin: 0 0 8px 0; }
+    .user-location { font-size: 13px; color: #444; margin: 0 0 8px 0; }
+    .user-bio-short { font-size: 14px; color: #333; margin: 0 0 16px 0; max-width: 600px; }
+
+    .stats-counter { display: flex; gap: 20px; font-size: 14px; color: #666; margin-bottom: 16px; }
+
+    .profile-actions-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .btn-follow { background: #0a66c2; color: #fff; padding: 7px 18px; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 13px; }
+    .btn-following { background: #e8f0fe; color: #0a66c2; padding: 7px 18px; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 13px; border: 1px solid #0a66c2; }
+    .btn-connect { border: 1px solid #0a66c2; color: #0a66c2; padding: 7px 18px; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 13px; }
+    .btn-accept { background: #e6f4ea; color: #137333; padding: 7px 18px; border-radius: 20px; font-weight: 600; text-decoration: none; font-size: 13px; border: 1px solid #137333; }
+
+    .pill-connected { background: #e6f4ea; color: #137333; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+    .pill-pending { background: #fef7e0; color: #b06000; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+
+    .section-card h2 { font-size: 18px; font-weight: 700; margin: 0 0 14px 0; }
+    .section-body { font-size: 14px; line-height: 1.5; color: #333; margin: 0; }
+
+    .items-list { display: flex; flex-direction: column; gap: 14px; }
+    .item-block { border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
+    .item-block:last-child { border-bottom: none; padding-bottom: 0; }
+    .item-block h3 { font-size: 15px; font-weight: 700; margin: 0 0 2px 0; }
+    .institution, .company { font-size: 13px; font-weight: 600; color: #191919; margin: 0; }
+    .dates { font-size: 12px; color: #666; margin: 2px 0 6px 0; }
+    .description { font-size: 13px; color: #444; margin: 0; }
+
+    .skills-flex { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-badge { background: #f3f2ef; color: #191919; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+    .empty-text { font-size: 13px; color: #888; font-style: italic; }
+</style>
+{% endblock %}

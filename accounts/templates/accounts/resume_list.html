@@ -1,0 +1,78 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}My Resumes - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="resumes-container">
+
+    <div class="card page-header">
+        <div>
+            <h2>📄 My Resumes</h2>
+            <p>Upload and manage your CVs for job applications.</p>
+        </div>
+        <a href="{% url 'accounts:upload_resume' %}" class="btn-primary">+ Upload Resume</a>
+    </div>
+
+    <div class="resumes-list">
+        {% for resume in resumes %}
+            <div class="card resume-card">
+                <div class="resume-header">
+                    <div class="resume-title-wrap">
+                        <span class="file-icon">📄</span>
+                        <div>
+                            <h3>{{ resume.title }}</h3>
+                            <p class="upload-date">Uploaded: {{ resume.uploaded_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+
+                    {% if resume.is_default %}
+                        <span class="badge-default">⭐ Default Resume</span>
+                    {% else %}
+                        <a href="{% url 'accounts:set_default_resume' resume.id %}" class="btn-set-default">Set as Default</a>
+                    {% endif %}
+                </div>
+
+                <div class="resume-actions">
+                    <a href="{% url 'accounts:download_resume' resume.id %}" class="btn-download">Download 📥</a>
+                    <a href="{% url 'accounts:delete_resume' resume.id %}" onclick="return confirm('Delete this resume?');" class="btn-delete">Delete 🗑️</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card empty-state">
+                <div class="empty-icon">📁</div>
+                <h3>No Resumes Uploaded</h3>
+                <p>Upload a resume to apply for positions faster.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .resumes-container { max-width: 800px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+    .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .page-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; }
+    .page-header p { margin: 0; color: #666; font-size: 14px; }
+
+    .resume-card { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+    .resume-header { display: flex; align-items: center; justify-content: space-between; width: 100%; border-bottom: 1px solid #f0f0f0; padding-bottom: 14px; }
+    
+    .resume-title-wrap { display: flex; align-items: center; gap: 12px; }
+    .file-icon { font-size: 28px; }
+    .resume-title-wrap h3 { font-size: 16px; font-weight: 700; margin: 0; }
+    .upload-date { font-size: 12px; color: #666; margin: 2px 0 0 0; }
+
+    .badge-default { background: #fef7e0; color: #b06000; padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; }
+    .btn-set-default { color: #0a66c2; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid #0a66c2; padding: 4px 10px; border-radius: 12px; }
+
+    .resume-actions { display: flex; gap: 14px; width: 100%; justify-content: flex-end; }
+    .btn-download { color: #0a66c2; font-weight: 600; text-decoration: none; font-size: 13px; }
+    .btn-delete { color: #d93025; font-weight: 600; text-decoration: none; font-size: 13px; }
+
+    .btn-primary { background: #0a66c2; color: #fff; padding: 8px 18px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .empty-state { text-align: center; padding: 40px 20px; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}My Subscription - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="subscription-container">
+
+    <div class="card sub-card">
+        <h2 class="page-title">💳 My Current Subscription</h2>
+
+        {% if subscription %}
+            <div class="plan-header">
+                <div>
+                    <h3 class="plan-name">{{ subscription.plan.name }}</h3>
+                    <p class="plan-price">₹{{ subscription.plan.price }} / billing cycle</p>
+                </div>
+                <span class="badge-active">Active</span>
+            </div>
+
+            <form method="post" action="{% url 'billing:cancel_subscription' %}" onsubmit="return confirm('Are you sure you want to cancel your plan?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-cancel">Cancel Subscription</button>
+            </form>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <h3>No Active Plan</h3>
+                <p>You currently do not have an active subscription package.</p>
+                <a href="{% url 'billing:subscription_plans' %}" class="btn-primary">Explore Plans</a>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+    .subscription-container { max-width: 650px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .sub-card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+    .page-title { font-size: 22px; font-weight: 700; margin: 0 0 24px 0; color: #191919; }
+
+    .plan-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 24px; }
+    .plan-name { font-size: 20px; font-weight: 700; margin: 0 0 4px 0; color: #191919; }
+    .plan-price { font-size: 14px; color: #666; margin: 0; }
+
+    .badge-active { background: #e6f4ea; color: #137333; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+    .btn-cancel { background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .btn-cancel:hover { background: #bb2d3b; }
+
+    .btn-primary { background: #0a66c2; color: white; padding: 10px 24px; border-radius: 20px; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-block; }
+
+    .empty-state { text-align: center; padding: 20px 0; }
+    .empty-icon { font-size: 44px; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 18px; margin: 0 0 6px 0; }
+    .empty-state p { font-size: 14px; color: #666; margin: 0 0 20px 0; }
+</style>
+{% endblock %}

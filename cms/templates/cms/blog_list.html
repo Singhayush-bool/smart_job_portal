@@ -1,0 +1,142 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Feed - Blogs & Career Tips - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="linkedin-feed-container">
+    
+    <!-- MAIN FEED COLUMN -->
+    <div class="feed-main-column">
+        
+        {% if user.is_authenticated %}
+        <!-- "Start a Post" Card -->
+        <div class="share-box-card">
+            <div class="share-box-header">
+                <div class="user-avatar-placeholder">{{ user.username|slice:":1"|upper }}</div>
+                <button type="button" class="share-trigger-btn" onclick="togglePostForm()">
+                    Start a post, article or career tip...
+                </button>
+            </div>
+            
+            <div id="postFormContainer" class="post-form-collapse" style="display: none;">
+                <form method="POST" enctype="multipart/form-data" class="linkedin-post-form">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        {{ form.title }}
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>Category</label>
+                            {{ form.category }}
+                        </div>
+                        <div class="form-group half">
+                            <label>Featured Image</label>
+                            {{ form.featured_image }}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.content }}
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" onclick="togglePostForm()">Cancel</button>
+                        <button type="submit" class="btn-post-submit">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="share-box-card login-prompt-card">
+            <p>Want to share your career tips? <a href="{% url 'accounts:login' %}">Sign in</a> to post.</p>
+        </div>
+        {% endif %}
+
+        <!-- POSTS FEED -->
+        <div class="posts-feed">
+            {% for blog in blogs %}
+                <div class="linkedin-post-card">
+                    <div class="post-header">
+                        <div class="post-author-avatar">{{ blog.author|slice:":1"|upper }}</div>
+                        <div class="post-author-info">
+                            <h4>{{ blog.author }}</h4>
+                            <p class="post-time">{{ blog.created_at|date:"M d, Y" }} • 🌐</p>
+                        </div>
+                        <span class="category-badge">{{ blog.get_category_display }}</span>
+                    </div>
+
+                    <div class="post-body">
+                        <h3><a href="{% url 'cms:blog_detail' blog.slug %}">{{ blog.title }}</a></h3>
+                        <p>{{ blog.content|truncatewords:35 }}</p>
+                    </div>
+
+                    {% if blog.featured_image %}
+                        <div class="post-image-container">
+                            <img src="{{ blog.featured_image.url }}" alt="{{ blog.title }}">
+                        </div>
+                    {% endif %}
+
+                    <!-- Counters & Actions -->
+                    <div class="post-social-bar">
+                        <span>❤️ {{ blog.likes.count }} Likes</span>
+                        <span>💬 {{ blog.comments.count }} Comments</span>
+                    </div>
+
+                    <div class="post-footer-actions">
+                        <a href="{% url 'cms:toggle_blog_like' blog.slug %}" class="action-btn {% if blog.is_liked %}active-like{% endif %}">
+                            ❤️ {% if blog.is_liked %}Liked{% else %}Like{% endif %}
+                        </a>
+                        <a href="{% url 'cms:blog_detail' blog.slug %}" class="action-btn">💬 Comment</a>
+                        <a href="{% url 'cms:blog_detail' blog.slug %}" class="action-btn read-more-link">Read Full Post &rarr;</a>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="linkedin-post-card text-center" style="padding: 30px;">
+                    <p>No posts in the feed yet. Be the first to share something!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function togglePostForm() {
+        const formContainer = document.getElementById('postFormContainer');
+        formContainer.style.display = (formContainer.style.display === 'none' || formContainer.style.display === '') ? 'block' : 'none';
+    }
+</script>
+
+<style>
+    body { background-color: #f3f2ef; font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .linkedin-feed-container { max-width: 680px; margin: 24px auto; padding: 0 15px; }
+    .share-box-card, .linkedin-post-card { background: #fff; border-radius: 8px; border: 1px solid #e0e0e0; padding: 16px; margin-bottom: 16px; box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+    .share-box-header { display: flex; align-items: center; gap: 12px; }
+    .user-avatar-placeholder, .post-author-avatar { width: 48px; height: 48px; background: #0a66c2; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+    .post-author-avatar { width: 40px; height: 40px; font-size: 16px; }
+    .share-trigger-btn { flex: 1; background: #fff; border: 1px solid #b2b2b2; border-radius: 35px; padding: 12px 16px; text-align: left; color: rgba(0,0,0,0.6); font-weight: 600; cursor: pointer; }
+    .share-trigger-btn:hover { background: #f9f9f9; }
+    .linkedin-post-form { margin-top: 16px; border-top: 1px solid #e0e0e0; padding-top: 16px; }
+    .linkedin-post-form .form-group { margin-bottom: 12px; }
+    .linkedin-post-form .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    .form-row { display: flex; gap: 12px; }
+    .form-group.half { flex: 1; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+    .btn-cancel { background: transparent; border: 1px solid #666; padding: 6px 16px; border-radius: 16px; cursor: pointer; color: #666; font-weight: 600; }
+    .btn-post-submit { background: #0a66c2; color: #fff; border: none; padding: 6px 20px; border-radius: 16px; cursor: pointer; font-weight: 600; }
+    .post-header { display: flex; align-items: center; padding-bottom: 12px; gap: 10px; }
+    .post-author-info h4 { margin: 0; font-size: 14px; color: #191919; font-weight: 600; }
+    .post-time { margin: 2px 0 0 0; font-size: 12px; color: #666; }
+    .category-badge { margin-left: auto; background: #eef3f8; color: #0a66c2; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+    .post-body { padding: 4px 0 12px 0; }
+    .post-body h3 a { color: #191919; text-decoration: none; font-size: 16px; }
+    .post-body h3 a:hover { color: #0a66c2; text-decoration: underline; }
+    .post-body p { color: #333; font-size: 14px; line-height: 1.5; margin-top: 6px; }
+    .post-image-container img { width: 100%; max-height: 400px; object-fit: cover; border-radius: 4px; }
+    .post-social-bar { display: flex; justify-content: space-between; font-size: 12px; color: #666; padding: 8px 4px; border-bottom: 1px solid #eee; margin-top: 8px; }
+    .post-footer-actions { display: flex; padding-top: 6px; justify-content: space-around; background: #fff; }
+    .action-btn { flex: 1; background: none; border: none; padding: 10px; color: #666; font-weight: 600; font-size: 13px; cursor: pointer; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .action-btn:hover { background: rgba(0,0,0,0.05); color: #333; }
+    .active-like { color: #0a66c2; }
+    .read-more-link { color: #0a66c2; }
+    .login-prompt-card { text-align: center; color: #666; font-size: 14px; }
+    .login-prompt-card a { color: #0a66c2; font-weight: 600; text-decoration: none; }
+</style>
+{% endblock %}

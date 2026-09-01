@@ -1,0 +1,229 @@
+{% extends "accounts/base.html" %}
+{% load ad_tags %}
+
+{% block title %}Find Jobs - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="home-layout">
+
+    <!-- ========================= -->
+    <!-- LEFT SIDEBAR (COMPACT PROFILE ONLY) -->
+    <!-- ========================= -->
+    <aside class="left-sidebar">
+        <div class="card profile-card">
+            <div class="profile-banner"></div>
+            <div class="profile-avatar-wrapper">
+                {% if request.user.job_seeker_profile.profile_image %}
+                    <img src="{{ request.user.job_seeker_profile.profile_image.url }}" class="profile-image" alt="Profile">
+                {% else %}
+                    <div class="profile-placeholder">{{ request.user.username|first|upper }}</div>
+                {% endif %}
+            </div>
+            <div class="profile-info">
+                <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                <p class="username">@{{ request.user.username }}</p>
+                <a href="{% url 'accounts:profile' %}" class="btn-secondary">View Profile</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT (SEARCH & JOB LISTINGS) -->
+    <!-- ========================= -->
+    <section class="feed-section">
+        
+        <!-- SEARCH & FILTER CARD (TOP OF FEED - LINKEDIN STYLE) -->
+        <div class="card search-filter-card">
+            <h3>🔍 Search & Filter Jobs</h3>
+            <form method="GET" action="{% url 'accounts:job_list' %}" class="filter-grid-form">
+                <div class="filter-row">
+                    <input type="text" name="keyword" value="{{ request.GET.keyword }}" placeholder="Job title, skills..." class="filter-input">
+                    <input type="text" name="location" value="{{ request.GET.location }}" placeholder="Location..." class="filter-input">
+                    <select name="employment_type" class="filter-input">
+                        <option value="">All Types</option>
+                        <option value="full_time" {% if request.GET.employment_type == 'full_time' %}selected{% endif %}>Full Time</option>
+                        <option value="part_time" {% if request.GET.employment_type == 'part_time' %}selected{% endif %}>Part Time</option>
+                        <option value="internship" {% if request.GET.employment_type == 'internship' %}selected{% endif %}>Internship</option>
+                        <option value="contract" {% if request.GET.employment_type == 'contract' %}selected{% endif %}>Contract</option>
+                    </select>
+                </div>
+                
+                <div class="filter-row-secondary">
+                    <div class="salary-inputs">
+                        <input type="number" name="salary_min" value="{{ request.GET.salary_min }}" placeholder="Min Salary (₹)" class="filter-input">
+                        <input type="number" name="salary_max" value="{{ request.GET.salary_max }}" placeholder="Max Salary (₹)" class="filter-input">
+                    </div>
+                    <div class="filter-buttons">
+                        <button type="submit" class="btn-primary">Search</button>
+                        <a href="{% url 'accounts:job_list' %}" class="btn-reset">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="feed-header-card">
+            <h2>Available Job Openings</h2>
+            <p>Explore top career opportunities matching your skills.</p>
+        </div>
+
+        <div class="job-listings-grid">
+            {% for job in jobs %}
+            <article class="card job-card">
+                <div class="job-card-header">
+                    <div>
+                        <h3 class="job-title"><a href="{% url 'accounts:job_detail' job.id %}">{{ job.title }}</a></h3>
+                        <p class="job-company">🏢 {{ job.employer.username }}</p>
+                    </div>
+                    {% if job.employment_type %}
+                        <span class="badge-type">{{ job.get_employment_type_display }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="job-meta">
+                    <span>📍 {{ job.location|default:"Remote / Not specified" }}</span>
+                    {% if job.salary_min or job.salary_max %}
+                        <span>💰 ₹{{ job.salary_min|default:"0" }} - ₹{{ job.salary_max|default:"Negotiable" }}</span>
+                    {% endif %}
+                </div>
+
+                <p class="job-snippet">{{ job.description|truncatechars:140 }}</p>
+
+                <div class="job-card-footer">
+                    <small class="text-muted">Posted {{ job.created_at|timesince }} ago</small>
+                    <a href="{% url 'accounts:job_detail' job.id %}" class="btn-sm">View Details →</a>
+                </div>
+            </article>
+            {% empty %}
+            <div class="card empty-feed">
+                <h3>No jobs found</h3>
+                <p>Try adjusting your search filters or check back later for new openings.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ========================= -->
+    <!-- RIGHT SIDEBAR (ADS / SUGGESTIONS) -->
+    <!-- ========================= -->
+    <aside class="right-sidebar">
+        {% if request.user.role != "EMPLOYER" and not request.user.is_superuser %}
+            <div class="card suggestion-card ai-feature-card">
+                <h3>🤖 AI Resume Matcher</h3>
+                <p class="suggestion-desc">Check ATS match score & missing skills against job descriptions.</p>
+                <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="btn-ai-sm">Scan Resume →</a>
+            </div>
+        {% endif %}
+
+        {% render_ad 'sidebar' %}
+
+        <div class="card suggestion-card">
+            <h3>📰 Career Insights</h3>
+            <p class="suggestion-desc">Read interview tips, resume guides, and industry trends.</p>
+            <a href="{% url 'cms:blog_list' %}" class="link-btn">Read Blogs →</a>
+        </div>
+    </aside>
+
+</div>
+
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-color: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --radius: 12px;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    body { background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    .home-layout { 
+        display: grid; 
+        grid-template-columns: 260px 1fr 280px; 
+        gap: 24px; 
+        max-width: 1250px; 
+        margin: 25px auto; 
+        padding: 0 15px; 
+        align-items: start; 
+    }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    
+    .left-sidebar, .right-sidebar { position: sticky; top: 76px; }
+
+    /* Profile Card */
+    .profile-card { text-align: center; position: relative; }
+    .profile-banner { height: 50px; background: linear-gradient(135deg, var(--primary-color), #00a0dc); }
+    .profile-avatar-wrapper { margin-top: -30px; margin-bottom: 8px; }
+    .profile-image, .profile-placeholder { width: 60px; height: 60px; border-radius: 50%; border: 3px solid white; margin: 0 auto; box-shadow: var(--shadow); }
+    .profile-image { object-fit: cover; }
+    .profile-placeholder { background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 22px; }
+    .profile-info { padding: 0 12px 12px; }
+    .profile-info h2 { font-size: 15px; font-weight: 600; margin: 0; }
+    .profile-info .username { color: var(--text-muted); font-size: 12px; margin: 2px 0 10px; }
+
+    /* Search & Filter Top Card */
+    .search-filter-card { padding: 16px; margin-bottom: 16px; }
+    .search-filter-card h3 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+    .filter-grid-form { display: flex; flex-direction: column; gap: 10px; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .filter-row-secondary { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .salary-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; }
+    .filter-buttons { display: flex; gap: 8px; align-items: center; }
+    
+    .filter-input { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+    .filter-input:focus { border-color: var(--primary-color); }
+    
+    .btn-reset { color: var(--text-muted); font-size: 12px; font-weight: 600; text-decoration: none; padding: 8px 12px; }
+    .btn-reset:hover { text-decoration: underline; color: var(--text-color); }
+
+    /* Feed Header */
+    .feed-header-card { margin-bottom: 12px; padding: 0 4px; }
+    .feed-header-card h2 { font-size: 18px; font-weight: 600; margin: 0 0 2px; }
+    .feed-header-card p { color: var(--text-muted); font-size: 13px; margin: 0; }
+
+    /* Job Cards */
+    .job-card { padding: 18px; transition: transform 0.2s; }
+    .job-card:hover { border-color: #b0b0b0; }
+    .job-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .job-title a { color: var(--primary-color); text-decoration: none; font-size: 16px; font-weight: 600; }
+    .job-title a:hover { text-decoration: underline; }
+    .job-company { color: var(--text-muted); font-size: 13px; margin: 2px 0 0; }
+    .badge-type { background: #e7f3ff; color: var(--primary-color); font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 12px; }
+    .job-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; font-weight: 500; }
+    .job-snippet { font-size: 13px; color: var(--text-color); line-height: 1.4; margin: 0 0 14px; }
+    .job-card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 10px; }
+
+    /* Buttons & Sidebars */
+    .btn-primary, .btn-secondary, .btn-sm, .btn-ai-sm { font-weight: 600; border-radius: 20px; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s ease; }
+    .btn-primary { background: var(--primary-color); color: white; border: none; padding: 8px 18px; font-size: 13px; text-align: center; }
+    .btn-secondary { border: 1px solid var(--primary-color); color: var(--primary-color); padding: 4px 14px; font-size: 12px; }
+    .btn-sm { background: var(--primary-color); color: white; border: none; padding: 6px 14px; font-size: 12px; border-radius: 16px; }
+    .btn-ai-sm { background: #6b21a8; color: #ffffff; border: none; padding: 6px 14px; font-size: 12px; border-radius: 20px; }
+    
+    .suggestion-card { padding: 16px; }
+    .suggestion-card h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+    .suggestion-desc { color: var(--text-muted); font-size: 12px; margin: 0 0 10px; }
+    .ai-feature-card { background: #f3e8ff; border-color: #d8b4fe; }
+    .link-btn { color: var(--primary-color); text-decoration: none; font-size: 13px; font-weight: 600; }
+    .link-btn:hover { text-decoration: underline; }
+    .empty-feed { padding: 40px; text-align: center; color: var(--text-muted); }
+
+    @media (max-width: 992px) { 
+        .home-layout { grid-template-columns: 220px 1fr; } 
+        .right-sidebar { display: none; } 
+    }
+    @media (max-width: 768px) {
+        .filter-row { grid-template-columns: 1fr; }
+        .filter-row-secondary { flex-direction: column; align-items: stretch; }
+        .salary-inputs { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 688px) { 
+        .home-layout { display: block; } 
+        .left-sidebar { position: static; } 
+    }
+</style>
+{% endblock %}

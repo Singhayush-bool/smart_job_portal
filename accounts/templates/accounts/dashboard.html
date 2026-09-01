@@ -1,0 +1,532 @@
+{% extends "accounts/base.html" %}
+{% load ad_tags %}
+
+{% block title %}SmartJobs - Home Dashboard{% endblock %}
+
+{% block content %}
+<div class="home-layout">
+
+    <!-- ========================= -->
+    <!-- LEFT SIDEBAR (STICKY) -->
+    <!-- ========================= -->
+    <aside class="left-sidebar">
+        <!-- PROFILE SUMMARY CARD -->
+        <div class="card profile-card">
+            <div class="profile-banner"></div>
+            <div class="profile-avatar-wrapper">
+                {% if request.user.job_seeker_profile.profile_image %}
+                    <img src="{{ request.user.job_seeker_profile.profile_image.url }}" class="profile-image" alt="{{ request.user.username }}'s profile picture">
+                {% else %}
+                    <div class="profile-placeholder">
+                        {{ request.user.username|first|upper }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="profile-info">
+                <h2>{{ request.user.get_full_name|default:request.user.username }}</h2>
+                <p class="username">@{{ request.user.username }}</p>
+                <a href="{% url 'accounts:profile' %}" class="btn-secondary">View Profile</a>
+            </div>
+        </div>
+
+        <!-- ROLE-BASED SIDEBAR NAVIGATION WITH STANDARD SCROLLBAR -->
+        <div class="card sidebar-menu-wrapper">
+            <nav class="sidebar-menu scrollable-menu" id="sidebarMenu" aria-label="Sidebar Navigation">
+                <a href="{% url 'accounts:profile' %}" class="menu-item">
+                    <span class="menu-item-content"><span class="icon">👤</span> My Profile</span>
+                </a>
+                
+                <!-- 🔴 1. ADMIN / STAFF LINKS -->
+                {% if request.user.is_superuser or request.user.is_staff or request.user.role|upper == "ADMIN" %}
+                    <a href="{% url 'analytics:super_admin_dashboard' %}" class="menu-item admin-analytics-link">
+                        <span class="menu-item-content"><span class="icon">🛠️</span> System Analytics</span>
+                    </a>
+                    <a href="{% url 'accounts:people' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">👥</span> User Management</span>
+                    </a>
+                    <a href="{% url 'ads:campaign_analytics' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">📢</span> Platform Ads</span>
+                    </a>
+
+                <!-- 🟠 2. EMPLOYER LINKS -->
+                {% elif request.user.role|upper == "EMPLOYER" or request.user.user_type|upper == "EMPLOYER" %}
+                    <a href="{% url 'accounts:job_list' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">💼</span> Posted Jobs</span>
+                    </a>
+                    <a href="{% url 'accounts:people' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">👥</span> Search Candidates</span>
+                    </a>
+                    <a href="{% url 'analytics:employer_analytics' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">📈</span> Analytics</span>
+                    </a>
+                    <a href="{% url 'messaging:inbox' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">💬</span> Candidate Messages</span>
+                        {% if unread_count > 0 %}<span class="badge-count">{{ unread_count }}</span>{% endif %}
+                    </a>
+                    <a href="{% url 'billing:subscription_plans' %}" class="menu-item upgrade-link">
+                        <span class="menu-item-content"><span class="icon">⭐</span> Subscription Plans</span>
+                    </a>
+                    <a href="{% url 'billing:my_subscription' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">💳</span> Active Plan</span>
+                    </a>
+
+                <!-- 🔵 3. JOB SEEKER LINKS -->
+                {% else %}
+                    <a href="{% url 'accounts:job_list' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">💼</span> Find Jobs</span>
+                    </a>
+                    <a href="{% url 'accounts:saved_jobs' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">🔖</span> Saved Jobs</span>
+                    </a>
+                    <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="menu-item ai-tool-link">
+                        <span class="menu-item-content"><span class="icon">🤖</span> AI Resume Scanner</span>
+                    </a>
+                    <a href="{% url 'ai_jobseeker:cover_letter' %}" class="menu-item ai-tool-link">
+                        <span class="menu-item-content"><span class="icon">✍️</span> AI Cover Letter</span>
+                    </a>
+                    <a href="{% url 'messaging:inbox' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">💬</span> Messages</span>
+                        {% if unread_count > 0 %}<span class="badge-count">{{ unread_count }}</span>{% endif %}
+                    </a>
+                    <a href="{% url 'analytics:job_seeker_analytics' %}" class="menu-item">
+                        <span class="menu-item-content"><span class="icon">📊</span> Analytics</span>
+                    </a>
+                {% endif %}
+
+                <!-- COMMON LINKS FOR ALL -->
+                <a href="{% url 'notifications:notification_list' %}" class="menu-item">
+                    <span class="menu-item-content"><span class="icon">🔔</span> Notifications</span>
+                </a>
+                <a href="{% url 'cms:blog_list' %}" class="menu-item">
+                    <span class="menu-item-content"><span class="icon">📰</span> Career Blogs</span>
+                </a>
+                <a href="{% url 'support:ticket_list' %}" class="menu-item">
+                    <span class="menu-item-content"><span class="icon">🎧</span> Support & Help</span>
+                </a>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- ========================= -->
+    <!-- MAIN FEED -->
+    <!-- ========================= -->
+    <section class="feed-section">
+
+        <!-- CREATE POST CARD -->
+        {% if not request.user.is_superuser %}
+        <div class="card create-post-card">
+            <div class="create-post-header">
+                <div class="user-avatar-sm">
+                    {% if request.user.job_seeker_profile.profile_image %}
+                        <img src="{{ request.user.job_seeker_profile.profile_image.url }}" class="avatar-img" alt="Avatar">
+                    {% else %}
+                        {{ request.user.username|first|upper }}
+                    {% endif %}
+                </div>
+                <h3>Share an update or hiring news</h3>
+            </div>
+            <form method="POST" action="{% url 'accounts:create_post' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <textarea name="content" placeholder="What do you want to talk about?" required></textarea>
+                
+                <div id="image-preview-container" class="image-preview-wrapper" style="display: none;">
+                    <img id="image-preview" src="" alt="Selected Image Preview">
+                    <button type="button" class="remove-img-btn" onclick="removeSelectedFile()">✕</button>
+                </div>
+
+                <div class="post-actions">
+                    <label class="file-upload-btn">
+                        📷 Photo
+                        <input type="file" id="post-image-input" name="image" accept="image/*" onchange="handleFileSelect(this)">
+                    </label>
+                    <span id="file-name-display" class="file-name"></span>
+                    <button type="submit" class="btn-primary">Post</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- HOMEPAGE BANNER AD UNIT -->
+        {% render_ad 'homepage' %}
+
+        <!-- FEED ITEMS -->
+        {% for post in posts %}
+        <article class="card post-card" id="post-{{ post.id }}">
+            <div class="post-header">
+                <div class="post-user">
+                    <div class="user-avatar-sm">
+                        {% if post.author.job_seeker_profile.profile_image %}
+                            <img src="{{ post.author.job_seeker_profile.profile_image.url }}" class="avatar-img" alt="{{ post.author.username }}">
+                        {% else %}
+                            {{ post.author.username|first|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="user-details">
+                        <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                        <small>@{{ post.author.username }} • {{ post.created_at|timesince }} ago</small>
+                    </div>
+                </div>
+
+                <!-- EDIT & DELETE BUTTONS -->
+                {% if post.author == request.user or user.is_staff or user.is_superuser %}
+                    <div class="author-actions">
+                        <a href="{% url 'accounts:edit_post' post.id %}" class="btn-edit-sm" title="Edit Post">✏️ Edit</a>
+                        <a href="{% url 'accounts:delete_post' post.id %}" class="btn-delete-sm" onclick="return confirm('Are you sure you want to delete this post?');" title="Delete Post">🗑️ Delete</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="post-content">
+                <p>{{ post.content }}</p>
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" class="post-image" alt="Post content image">
+                {% endif %}
+            </div>
+
+            <div class="post-counts">
+                <span id="likes-count-{{ post.id }}">❤️ {{ post.likes.count }} Likes</span>
+                <span id="comments-count-{{ post.id }}">💬 {{ post.comments.count }} Comments</span>
+                <span id="reposts-count-{{ post.id }}">🔁 {{ post.reposted_by.count }} Reposts</span>
+            </div>
+
+            <div class="post-buttons">
+                <form method="POST" action="{% url 'accounts:toggle_like' post.id %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn-link">❤️ Like</button>
+                </form>
+
+                <button type="button" class="action-btn-link" onclick="focusCommentInput({{ post.id }})">💬 Comment</button>
+
+                <form method="POST" action="{% url 'accounts:toggle_repost' post.id %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn-link">🔁 Repost</button>
+                </form>
+
+                {% if request.user.role != "EMPLOYER" and request.user.user_type != "employer" %}
+                <form method="POST" action="{% url 'accounts:toggle_save_post' post.id %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn-link">🔖 Save</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{% url 'accounts:add_comment' post.id %}" class="comment-form">
+                {% csrf_token %}
+                <input type="text" id="comment-input-{{ post.id }}" name="content" placeholder="Add a comment..." required>
+                <button type="submit" class="btn-sm">Send</button>
+            </form>
+
+            <div id="comment-list-{{ post.id }}" class="comments-section">
+                {% for comment in post.comments.all %}
+                    {% if not comment.parent %}
+                    <div class="comment-box">
+                        <div class="comment-content" style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <strong>{{ comment.user.get_full_name|default:comment.user.username }}</strong>
+                                <p>{{ comment.content }}</p>
+                            </div>
+                            
+                            <!-- COMMENT DELETE BUTTON -->
+                            {% if comment.user == request.user or post.author == request.user %}
+                                <form action="{% url 'accounts:delete_comment' comment.id %}" method="POST" style="margin: 0;">
+                                    {% csrf_token %}
+                                    <button type="submit" title="Delete Comment" style="background: none; border: none; color: #c5221f; font-size: 11px; font-weight: 600; cursor: pointer;">Delete</button>
+                                </form>
+                            {% endif %}
+                        </div>
+
+                        <form method="POST" action="{% url 'accounts:add_reply' comment.id %}" class="reply-form">
+                            {% csrf_token %}
+                            <input type="text" name="content" placeholder="Write a reply..." required>
+                            <button type="submit" class="btn-xs">Reply</button>
+                        </form>
+
+                        {% for reply in comment.replies.all %}
+                            <div class="reply-box">
+                                <strong>{{ reply.user.get_full_name|default:reply.user.username }}</strong>
+                                <p>{{ reply.content }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </article>
+        {% empty %}
+            <div class="card empty-feed">
+                <h3>No posts available yet</h3>
+                <p>Be the first professional to start a conversation!</p>
+            </div>
+        {% endfor %}
+    </section>
+
+    <!-- ========================= -->
+    <!-- RIGHT SIDEBAR (STICKY) -->
+    <!-- ========================= -->
+    <aside class="right-sidebar">
+        {% if request.user.role != "EMPLOYER" and not request.user.is_superuser %}
+            <div class="card suggestion-card ai-feature-card">
+                <h3>🤖 AI Resume Matcher</h3>
+                <p class="suggestion-desc">Check ATS match score & missing skills against job descriptions.</p>
+                <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="btn-ai-sm">Scan Resume →</a>
+            </div>
+        {% endif %}
+
+        {% if request.user.role == "EMPLOYER" or request.user.user_type == "employer" %}
+            <div class="card suggestion-card promo-plan-card">
+                <h3>🚀 Unlock Premium Hiring</h3>
+                <p class="suggestion-desc">Get priority candidate listing and post unlimited job openings.</p>
+                <a href="{% url 'billing:subscription_plans' %}" class="btn-primary-sm">Explore Plans →</a>
+            </div>
+        {% endif %}
+
+        {% render_ad 'sidebar' %}
+
+        <div class="card suggestion-card">
+            <h3>📰 Career Insights</h3>
+            <p class="suggestion-desc">Read career tips, industry news, and interview guidance.</p>
+            <a href="{% url 'cms:blog_list' %}" class="link-btn">Read Blogs →</a>
+        </div>
+
+        <div class="card suggestion-card">
+            <h3>🎧 Support Tickets</h3>
+            <p class="suggestion-desc">Facing issues? Raise a ticket or track existing ones.</p>
+            <a href="{% url 'support:ticket_list' %}" class="link-btn">Get Support →</a>
+        </div>
+    </aside>
+
+</div>
+
+<script>
+    function focusCommentInput(postId) {
+        const input = document.getElementById('comment-input-' + postId);
+        if (input) { input.focus(); }
+    }
+
+    function handleFileSelect(input) {
+        const display = document.getElementById('file-name-display');
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImg = document.getElementById('image-preview');
+
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            display.textContent = '📎 ' + file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            removeSelectedFile();
+        }
+    }
+
+    function removeSelectedFile() {
+        const input = document.getElementById('post-image-input');
+        const display = document.getElementById('file-name-display');
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewImg = document.getElementById('image-preview');
+
+        input.value = '';
+        display.textContent = '';
+        previewImg.src = '';
+        previewContainer.style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.inline-action-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const actionUrl = this.action;
+
+                fetch(actionUrl, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.ok ? response.json() : window.location.reload())
+                .then(data => {
+                    if (data && data.success) {
+                        const postId = data.post_id;
+                        if (data.likes_count !== undefined) {
+                            document.getElementById(`likes-count-${postId}`).textContent = `❤️ ${data.likes_count} Likes`;
+                        }
+                        if (data.reposts_count !== undefined) {
+                            document.getElementById(`reposts-count-${postId}`).textContent = `🔁 ${data.reposts_count} Reposts`;
+                        }
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(() => this.submit());
+            });
+        });
+    });
+</script>
+
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-color: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --radius: 12px;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    body { background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    
+    .home-layout { 
+        display: grid; 
+        grid-template-columns: 260px 1fr 280px; 
+        gap: 24px; 
+        max-width: 1250px; 
+        margin: 25px auto; 
+        padding: 0 15px; 
+        align-items: start; 
+    }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    
+    /* STICKY SIDEBARS */
+    .left-sidebar, .right-sidebar { 
+        position: sticky; 
+        top: 76px; 
+    }
+
+    .profile-card { text-align: center; position: relative; }
+    .profile-banner { height: 60px; background: linear-gradient(135deg, var(--primary-color), #00a0dc); }
+    .profile-avatar-wrapper { margin-top: -35px; margin-bottom: 10px; }
+    .profile-image, .profile-placeholder { width: 72px; height: 72px; border-radius: 50%; border: 3px solid white; margin: 0 auto; box-shadow: var(--shadow); }
+    .profile-image { object-fit: cover; }
+    .profile-placeholder, .user-avatar-sm { background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; overflow: hidden; }
+    .profile-placeholder { font-size: 26px; }
+    .user-avatar-sm { width: 42px; height: 42px; border-radius: 50%; font-size: 16px; flex-shrink: 0; }
+    .avatar-img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-info { padding: 0 16px 16px; }
+    .profile-info h2 { font-size: 16px; font-weight: 600; margin: 0; }
+    .profile-info .username { color: var(--text-muted); font-size: 13px; margin: 4px 0 14px; }
+    .btn-primary, .btn-secondary, .btn-sm, .btn-xs, .btn-primary-sm, .btn-ai-sm { font-weight: 600; border-radius: 20px; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s ease; }
+    .btn-primary { background: var(--primary-color); color: white; border: none; padding: 8px 20px; }
+    .btn-primary-sm { background: #e7a33e; color: #000; border: none; padding: 6px 14px; font-size: 12px; }
+    .btn-primary-sm:hover { background: #d8922d; }
+    .btn-ai-sm { background: #6b21a8; color: #ffffff; border: none; padding: 6px 14px; font-size: 12px; }
+    .btn-ai-sm:hover { background: #581c87; }
+    .btn-secondary { border: 1px solid var(--primary-color); color: var(--primary-color); padding: 6px 16px; font-size: 13px; }
+    .btn-secondary:hover { background: rgba(10, 102, 194, 0.08); }
+    .btn-sm { background: var(--primary-color); color: white; border: none; padding: 6px 14px; border-radius: 16px; font-size: 13px; }
+    .btn-xs { background: #e0e0e0; color: #333; border: none; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+    
+    /* SIDEBAR MENU WRAPPER WITH STANDARD SCROLLBAR */
+    .sidebar-menu-wrapper {
+        padding: 6px !important;
+    }
+
+    .scrollable-menu {
+        max-height: 280px; /* Adjust height as needed */
+        overflow-y: auto;
+        padding-right: 4px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        /* Standard Scrollbar Styling */
+        scrollbar-width: thin;
+        scrollbar-color: #c1c1c1 #f1f1f1;
+    }
+
+    /* Webkit Scrollbar Styling (Chrome, Safari, Edge) */
+    .scrollable-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .scrollable-menu::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .scrollable-menu::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 4px;
+    }
+
+    .scrollable-menu::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+
+    .sidebar-menu { padding: 4px 0; }
+    .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; color: var(--text-color); text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 6px; }
+    .menu-item:hover { background: rgba(0, 0, 0, 0.04); color: var(--primary-color); }
+    
+    .menu-item-content { display: flex; align-items: center; gap: 10px; }
+    .menu-item .icon { display: inline-flex; align-items: center; justify-content: center; width: 20px; flex-shrink: 0; }
+
+    .badge-count { background: #d93025; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+    .ai-tool-link { color: #6b21a8; font-weight: 600; }
+    .ai-tool-link:hover { color: #581c87; background: #f3e8ff; }
+    .upgrade-link { color: #b87100; font-weight: 600; }
+    .upgrade-link:hover { color: #8c5500; background: #fff8eb; }
+    .admin-analytics-link { color: #d93025; font-weight: 600; }
+    .admin-analytics-link:hover { color: #b71c1c; background: #fce8e6; }
+    
+    .create-post-card { padding: 16px; }
+    .create-post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .create-post-header h3 { font-size: 15px; font-weight: 600; margin: 0; }
+    .create-post-card textarea { width: 100%; box-sizing: border-box; min-height: 80px; border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; font-family: inherit; font-size: 14px; outline: none; resize: vertical; }
+    .image-preview-wrapper { position: relative; margin-top: 10px; max-width: 150px; }
+    .image-preview-wrapper img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border-color); }
+    .remove-img-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 12px; line-height: 1; }
+    .post-actions { margin-top: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .file-upload-btn { font-size: 13px; font-weight: 600; color: var(--text-muted); cursor: pointer; padding: 6px 12px; border-radius: 4px; }
+    .file-upload-btn input[type="file"] { display: none; }
+    .file-name { font-size: 12px; color: var(--text-muted); }
+    .post-card { padding: 16px; }
+    
+    .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .post-user { display: flex; align-items: center; gap: 10px; }
+    .user-details strong { display: block; font-size: 14px; }
+    .user-details small { color: var(--text-muted); font-size: 12px; }
+    .author-actions { display: flex; gap: 6px; }
+    .btn-edit-sm { background: #f3f2ef; color: #0a66c2; text-decoration: none; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; transition: background 0.2s; }
+    .btn-edit-sm:hover { background: #e0e0e0; }
+    .btn-delete-sm { background: #fce8e6; color: #c5221f; text-decoration: none; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; transition: background 0.2s; }
+    .btn-delete-sm:hover { background: #f8d7da; }
+
+    .post-content p { font-size: 14px; line-height: 1.5; margin: 0 0 12px; }
+    .post-image { width: 100%; max-height: 450px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; }
+    .post-counts { display: flex; gap: 16px; color: var(--text-muted); font-size: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+    .post-buttons { display: flex; justify-content: space-around; padding: 6px 0; border-bottom: 1px solid var(--border-color); }
+    .inline-action-form { display: inline; margin: 0; }
+    .action-btn-link { background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+    .action-btn-link:hover { background: rgba(0, 0, 0, 0.04); color: var(--primary-color); }
+    .comment-form { display: flex; gap: 8px; margin-top: 12px; }
+    .comment-form input, .reply-form input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 20px; font-size: 13px; outline: none; }
+    .comments-section { margin-top: 12px; }
+    .comment-box { background: #f8f9fa; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; }
+    .reply-form { display: flex; gap: 6px; margin-top: 6px; }
+    .reply-box { background: #ffffff; border-left: 3px solid var(--primary-color); padding: 6px 10px; margin-top: 6px; margin-left: 16px; border-radius: 0 6px 6px 0; }
+    .suggestion-card { padding: 16px; }
+    .suggestion-card h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+    .suggestion-desc { color: var(--text-muted); font-size: 12px; margin: 0 0 10px; }
+    .ai-feature-card { background: #f3e8ff; border-color: #d8b4fe; }
+    .promo-plan-card { background: #fff8eb; border-color: #f1d39b; }
+    .link-btn { color: var(--primary-color); text-decoration: none; font-size: 13px; font-weight: 600; }
+    .link-btn:hover { text-decoration: underline; }
+    .empty-feed { padding: 30px; text-align: center; color: var(--text-muted); }
+
+    @media (max-width: 992px) { 
+        .home-layout { grid-template-columns: 220px 1fr; } 
+        .right-sidebar { display: none; } 
+    }
+    @media (max-width: 688px) { 
+        .home-layout { display: block; } 
+        .left-sidebar { position: static; } 
+        .scrollable-menu { max-height: none; overflow-y: visible; } 
+    }
+</style>
+{% endblock %}

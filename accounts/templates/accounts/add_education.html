@@ -1,0 +1,247 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Add Education - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="card form-card">
+        
+        <!-- HEADER -->
+        <div class="form-header">
+            <h2>🎓 Add Education</h2>
+            <p>Highlight your academic qualification to strengthen your professional profile.</p>
+        </div>
+
+        <!-- FORM SECTION -->
+        <form method="POST" class="styled-form">
+            {% csrf_token %}
+            
+            <div class="form-body">
+                <!-- NON-FIELD ERRORS -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- DYNAMIC FORM FIELDS -->
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}<span class="required-asterisk">*</span>{% endif %}
+                        </label>
+                        
+                        {{ field }}
+                        
+                        {% if field.help_text %}
+                            <small class="form-help-text">{{ field.help_text }}</small>
+                        {% endif %}
+                        
+                        {% if field.errors %}
+                            <div class="field-error">
+                                {% for error in field.errors %}
+                                    <span>⚠️ {{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- BUTTON ACTIONS -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">💾 Save Education</button>
+                <a href="{% url 'accounts:profile' %}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- HIGH QUALITY STYLES -->
+<!-- ========================= -->
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-main: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --error-color: #d93025;
+        --radius: 12px;
+        --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+        background-color: var(--bg-color);
+    }
+
+    .form-page-container {
+        max-width: 600px;
+        margin: 36px auto;
+        padding: 0 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 32px;
+    }
+
+    .form-header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0 0 6px 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .styled-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+
+    .required-asterisk {
+        color: var(--error-color);
+        margin-left: 2px;
+    }
+
+    /* Target all input types automatically */
+    .styled-form input[type="text"],
+    .styled-form input[type="email"],
+    .styled-form input[type="url"],
+    .styled-form input[type="date"],
+    .styled-form input[type="number"],
+    .styled-form select,
+    .styled-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text-main);
+        background-color: #ffffff;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        outline: none;
+    }
+
+    .styled-form input:focus,
+    .styled-form select:focus,
+    .styled-form textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+    }
+
+    .styled-form textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .form-help-text {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .field-error {
+        color: var(--error-color);
+        font-size: 12px;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .alert-danger {
+        background-color: #fce8e6;
+        border: 1px solid #fad2cf;
+        color: var(--error-color);
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        font-size: 13px;
+    }
+
+    .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 28px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: #ffffff;
+        border: none;
+        padding: 10px 22px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: 1px solid var(--border-color);
+        padding: 9px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 20px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+        color: var(--text-main);
+    }
+
+    @media (max-width: 480px) {
+        .form-page-container {
+            margin: 16px auto;
+        }
+        .form-card {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}

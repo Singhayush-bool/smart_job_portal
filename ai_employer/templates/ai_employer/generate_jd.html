@@ -1,0 +1,89 @@
+{% extends "accounts/base.html" %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 900px; margin: 0 auto; padding: 20px;">
+    <h2>✨ AI Job Description Generator</h2>
+    <hr style="margin: 15px 0;">
+    
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <!-- INPUT FORM -->
+        <div style="flex: 1; min-width: 300px;">
+            <form id="jdForm" style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                {% csrf_token %}
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;">Job Title:</label>
+                    <input type="text" name="job_title" class="form-control" placeholder="e.g. Senior Django Developer" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;">Key Required Skills:</label>
+                    <input type="text" name="skills" class="form-control" placeholder="e.g. Python, Django, REST API, PostgreSQL" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px;">Experience Level:</label>
+                    <select name="experience_level" class="form-select" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="Junior (0-2 Yrs)">Junior (0-2 Yrs)</option>
+                        <option value="Mid-Level (2-5 Yrs)" selected>Mid-Level (2-5 Yrs)</option>
+                        <option value="Senior (5+ Yrs)">Senior (5+ Yrs)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="btnGenerate" class="btn" style="width: 100%; background: #0a66c2; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600;">Generate JD with AI</button>
+            </form>
+        </div>
+
+        <!-- AI OUTPUT -->
+        <div style="flex: 1.2; min-width: 300px;">
+            <div id="outputCard" class="d-none" style="display: none; background: white; border-radius: 8px; border: 1px solid #ddd; overflow: hidden;">
+                <div style="background: #2e7d32; color: white; padding: 12px 16px; font-weight: 600;">
+                    Generated Job Description
+                </div>
+                <div style="padding: 16px;">
+                    <textarea id="jdOutput" rows="14" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-family: inherit; font-size: 14px;"></textarea>
+                    <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('jdOutput').value)" style="margin-top: 10px; float: right; background: #666; color: white;">📋 Copy to Clipboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('jdForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btnGen = document.getElementById('btnGenerate');
+    const outputTextarea = document.getElementById('jdOutput');
+    const outputCard = document.getElementById('outputCard');
+    
+    btnGen.disabled = true;
+    btnGen.innerText = 'Generating JD...';
+
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch("{% url 'ai_employer:generate_jd' %}", {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+
+        if (response.ok && data.job_description) {
+            outputTextarea.value = data.job_description;
+            outputCard.style.display = 'block';
+        } else {
+            // Error hone par warning alert aur text field me error message set karein
+            const errorMsg = data.error || "Failed to generate Job Description.";
+            outputTextarea.value = errorMsg;
+            outputCard.style.display = 'block';
+        }
+    } catch (err) {
+        alert("Network or Server Connection Error!");
+    } finally {
+        btnGen.disabled = false;
+        btnGen.innerText = 'Generate JD with AI';
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Add Certification - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="card form-card">
+        <div class="form-header">
+            <h2>📜 Add Certification</h2>
+            <p>Detail your licenses and professional certifications.</p>
+        </div>
+
+        <form method="POST" class="styled-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <p class="error-msg">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-body">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="error-text">{{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Certification</button>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-page-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 0 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .form-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #191919;
+        margin: 0 0 6px 0;
+    }
+
+    .form-header p {
+        font-size: 14px;
+        color: #666666;
+        margin: 0 0 24px 0;
+    }
+
+    .form-body {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333333;
+    }
+
+    /* Input Fields Styling */
+    .styled-form input[type="text"],
+    .styled-form input[type="url"],
+    .styled-form input[type="date"],
+    .styled-form textarea,
+    .styled-form select {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #cccccc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        outline: none;
+    }
+
+    .styled-form input:focus,
+    .styled-form textarea:focus,
+    .styled-form select:focus {
+        border-color: #0a66c2;
+        box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+    }
+
+    /* Buttons Styling */
+    .form-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 28px;
+    }
+
+    .btn {
+        padding: 10px 22px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        display: inline-block;
+        transition: all 0.2s ease;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background-color: #0a66c2;
+        color: #ffffff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #084e96;
+    }
+
+    .btn-secondary {
+        background-color: transparent;
+        color: #666666;
+        border: 1px solid #cccccc;
+    }
+
+    .btn-secondary:hover {
+        background-color: #f3f3f3;
+        color: #333333;
+    }
+
+    .alert-danger {
+        background-color: #fce8e6;
+        border: 1px solid #ea4335;
+        color: #c5221f;
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 18px;
+    }
+
+    .error-text {
+        color: #d93025;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+</style>
+{% endblock %}

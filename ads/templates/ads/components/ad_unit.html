@@ -1,0 +1,17 @@
+{% if ad %}
+<div class="ad-unit-box" style="border: 1px solid #e0e0e0; padding: 12px; background: #fafafa; border-radius: 8px; margin: 15px 0;">
+    <small style="color: #888; font-size: 10px; text-transform: uppercase;">Sponsored</small>
+    
+    {% if ad.banner_image %}
+        <a href="{% url 'ads:track_ad_click' ad.id %}" target="_blank">
+            <img src="{{ ad.banner_image.url }}" alt="{{ ad.title }}" style="width: 100%; height: auto; border-radius: 6px; margin-top: 6px;">
+        </a>
+    {% endif %}
+
+    <h4 style="margin: 8px 0 4px; font-size: 14px;">
+        <a href="{% url 'ads:track_ad_click' ad.id %}" target="_blank" style="text-decoration: none; color: #0a66c2;">
+            {{ ad.title }}
+        </a>
+    </h4>
+</div>
+{% endif %}

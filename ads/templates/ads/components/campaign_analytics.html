@@ -1,0 +1,70 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Ad Campaign Analytics - SmartJobs{% endblock %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 30px auto; padding: 0 15px;">
+
+    <h1>📈 Ad Campaigns & Analytics Dashboard</h1>
+    <p>Track your ad impressions, clicks, conversions, CTR, and expenditure in real time.</p>
+    <hr style="margin-bottom: 25px;">
+
+    <!-- TOP STAT CARDS -->
+    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
+        <div style="flex: 1; min-width: 200px; background: #e3f2fd; padding: 20px; border-radius: 8px;">
+            <h4 style="margin:0; color: #0d47a1;">👁️ Total Impressions</h4>
+            <h2 style="margin: 10px 0 0;">{{ total_impressions }}</h2>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: #e8f5e9; padding: 20px; border-radius: 8px;">
+            <h4 style="margin:0; color: #1b5e20;">🖱️ Total Clicks</h4>
+            <h2 style="margin: 10px 0 0;">{{ total_clicks }}</h2>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: #fff3e0; padding: 20px; border-radius: 8px;">
+            <h4 style="margin:0; color: #e65100;">🎯 CTR (Click Through)</h4>
+            <h2 style="margin: 10px 0 0;">{{ overall_ctr }}%</h2>
+        </div>
+        <div style="flex: 1; min-width: 200px; background: #f3e5f5; padding: 20px; border-radius: 8px;">
+            <h4 style="margin:0; color: #4a148c;">💸 Total Spent / Revenue</h4>
+            <h2 style="margin: 10px 0 0;">₹{{ total_revenue }}</h2>
+        </div>
+    </div>
+
+    <!-- CAMPAIGN BREAKDOWN TABLE -->
+    <h3>Active Ad Placements</h3>
+    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>Ad Title</th>
+                <th>Placement Type</th>
+                <th>Impressions</th>
+                <th>Clicks</th>
+                <th>CTR (%)</th>
+                <th>Spent</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ad in ads %}
+            <tr>
+                <td><strong>{{ ad.title }}</strong></td>
+                <td><span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 12px;">{{ ad.get_ad_type_display }}</span></td>
+                <td>{{ ad.impressions }}</td>
+                <td>{{ ad.clicks }}</td>
+                <td><strong>{{ ad.ctr }}%</strong></td>
+                <td>₹{{ ad.total_revenue }}</td>
+                <td>
+                    {% if ad.is_active %}
+                        <span style="color: green; font-weight: bold;">ACTIVE</span>
+                    {% else %}
+                        <span style="color: red; font-weight: bold;">PAUSED</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">No active ad campaigns running.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}

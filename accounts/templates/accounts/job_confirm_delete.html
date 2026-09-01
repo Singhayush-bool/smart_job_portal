@@ -1,0 +1,156 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Confirm Delete - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="linkedin-job-container">
+    <div class="linkedin-card delete-card">
+        
+        <!-- Header -->
+        <div class="linkedin-header">
+            <div class="linkedin-icon delete-icon">⚠️</div>
+            <div>
+                <h2>Delete Job Listing</h2>
+                <p>Are you sure you want to remove this job?</p>
+            </div>
+        </div>
+
+        <!-- Warning Message -->
+        <div class="delete-warning">
+            <p>You are about to permanently delete the job listing for <strong>"{{ job.title }}"</strong>.</p>
+            <p>This action cannot be undone and all data related to this job will be lost.</p>
+        </div>
+
+        <!-- Form for Post request to delete -->
+        <form method="post" class="linkedin-form mt-4">
+            {% csrf_token %}
+            
+            <!-- Actions -->
+            <div class="linkedin-actions">
+                <button type="submit" class="linkedin-btn-danger">Yes, Delete Job</button>
+                <a href="{% url 'accounts:employer_jobs' %}" class="linkedin-btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<style>
+    body {
+        background-color: #f3f2ef !important;
+    }
+    
+    .linkedin-job-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 0 16px;
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .linkedin-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        padding: 36px;
+    }
+
+    .delete-card {
+        border-top: 4px solid #d11124;
+    }
+
+    .linkedin-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .delete-icon {
+        background: #fce8e6;
+        color: #d11124;
+        font-size: 24px;
+        padding: 14px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .linkedin-header h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.9);
+        margin: 0 0 4px 0;
+    }
+
+    .linkedin-header p {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+        margin: 0;
+    }
+
+    .delete-warning {
+        background-color: #fff8f8;
+        border: 1px solid #ffcccc;
+        padding: 16px;
+        border-radius: 8px;
+        color: #b30000;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .delete-warning p {
+        margin: 0 0 8px 0;
+    }
+    
+    .delete-warning p:last-child {
+        margin-bottom: 0;
+    }
+
+    .linkedin-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .linkedin-btn-danger {
+        background-color: #d11124;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 24px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .linkedin-btn-danger:hover {
+        background-color: #a00d1b;
+    }
+
+    .linkedin-btn-secondary {
+        background-color: transparent;
+        color: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.6);
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 24px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .linkedin-btn-secondary:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+        color: rgba(0, 0, 0, 0.9);
+    }
+</style>
+{% endblock %}

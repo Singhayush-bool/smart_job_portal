@@ -1,0 +1,161 @@
+{% extends "accounts/base.html" %}
+{% block title %}SmartJobs - Notifications Hub{% endblock %}
+
+{% block content %}
+<style>
+    .notif-wrapper {
+        max-width: 820px;
+        margin: 2rem auto;
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+    .notif-header-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 20px 24px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        margin-bottom: 16px;
+        border: 1px solid #e9ecef;
+    }
+    .notif-main-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        border: 1px solid #e9ecef;
+        overflow: hidden;
+    }
+    .notif-item {
+        padding: 16px 24px;
+        transition: background 0.15s ease-in-out;
+        border-bottom: 1px solid #f1f3f5;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+    }
+    .notif-item:last-child {
+        border-bottom: none;
+    }
+    .notif-item.unread {
+        background-color: #f0f4f8;
+        border-left: 4px solid #0d6efd;
+    }
+    .notif-item:hover {
+        background-color: #f8f9fa;
+    }
+    .notif-icon-box {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #eef2f7;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        margin-right: 16px;
+    }
+    .notif-content {
+        flex-grow: 1;
+        margin-right: 16px;
+    }
+    .notif-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 3px;
+    }
+    .notif-message {
+        font-size: 0.9rem;
+        color: #495057;
+        margin-bottom: 6px;
+        line-height: 1.4;
+    }
+    .notif-meta {
+        font-size: 0.75rem;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .notif-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+    .btn-action-read {
+        font-size: 0.75rem;
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="notif-wrapper">
+    <!-- Header Section -->
+    <div class="notif-header-card d-flex flex-row justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold text-dark m-0" style="font-size: 1.3rem;">🔔 Notifications</h4>
+            <p class="text-muted m-0 mt-1" style="font-size: 0.85rem;">Stay updated with your professional activities</p>
+        </div>
+        <div>
+            <a href="{% url 'notifications:mark_all_as_read' %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-semibold" style="font-size: 0.8rem;">Mark all as read</a>
+        </div>
+    </div>
+
+    <!-- Notifications Feed Container -->
+    <div class="notif-main-card">
+        {% for notif in notifications %}
+            <div class="notif-item {% if not notif.is_read %}unread{% endif %}">
+                
+                <!-- Left Icon Based on Context -->
+                <div class="notif-icon-box">
+                    {% if "like" in notif.title|lower %}❤️
+                    {% elif "comment" in notif.title|lower %}💬
+                    {% elif "connection" in notif.title|lower or "request" in notif.title|lower %}🤝
+                    {% elif "profile" in notif.title|lower %}👀
+                    {% elif "application" in notif.title|lower or "job" in notif.title|lower %}💼
+                    {% else %}🔔{% endif %}
+                </div>
+
+                <!-- Center Text Content -->
+                <div class="notif-content">
+                    <div class="notif-title">{{ notif.title }}</div>
+                    <div class="notif-message">{{ notif.message }}</div>
+                    <div class="notif-meta">
+                        <span>{{ notif.created_at|timesince }} ago</span>
+                        <span>•</span>
+                        <span class="badge bg-light text-dark border px-2 py-0.5" style="font-size: 0.65rem;">{{ notif.channel }}</span>
+                    </div>
+                </div>
+
+                <!-- Right Action Buttons -->
+                <div class="notif-actions">
+                {% if "connection" in notif.title|lower or "request" in notif.title|lower %}
+    {% if notif.sender %}
+        <!-- Accept button jo click hone par accept karega aur chat kholega -->
+        <a href="{% url 'notifications:accept_connection' notif.pk %}" class="btn btn-sm btn-primary btn-action-read">Accept & Chat</a>
+    {% else %}
+        <a href="#" class="btn btn-sm btn-primary btn-action-read">Accept</a>
+    {% endif %}
+    <a href="#" class="btn btn-sm btn-outline-danger btn-action-read">Ignore</a>
+{% else %}
+    <!-- Baki notifications ke liye Mark Read -->
+    {% if not notif.is_read %}
+        <a href="{% url 'notifications:mark_as_read' notif.pk %}" class="btn btn-sm btn-light border text-primary btn-action-read shadow-sm">Mark Read</a>
+    {% else %}
+        <span class="text-muted small px-2" style="font-size: 0.75rem; font-weight: 500;">Read</span>
+    {% endif %}
+{% endif %}
+                </div>
+
+            </div>
+        {% empty %}
+            <div class="text-center py-5">
+                <div class="mb-2" style="font-size: 45px;">📭</div>
+                <h5 class="text-dark fw-bold mb-1">No notifications right now!</h5>
+                <p class="text-muted small m-0">When people interact with your profile or posts, you'll see it here.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

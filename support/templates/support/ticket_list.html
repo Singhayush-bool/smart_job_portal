@@ -1,0 +1,220 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Support Tickets - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="tickets-list-container">
+    
+    <!-- TOP HEADER -->
+    <div class="tickets-header-row">
+        <div>
+            <h2>Support Tickets</h2>
+            <p>Track your reported issues and queries with our team.</p>
+        </div>
+        <a href="{% url 'support:create_ticket' %}" class="btn-create-ticket">+ Create Ticket</a>
+    </div>
+
+    <!-- TABLE CARD WRAPPER -->
+    <div class="tickets-card">
+        <div class="table-responsive">
+            <table class="linkedin-table">
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Subject</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th class="text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in tickets %}
+                    <tr>
+                        <td><code class="ticket-id">#{{ ticket.ticket_id|slice:":8" }}</code></td>
+                        <td class="ticket-subject-cell">{{ ticket.subject }}</td>
+                        <td>
+                            <span class="badge-priority {{ ticket.priority|lower }}">{{ ticket.priority }}</span>
+                        </td>
+                        <td>
+                            <span class="badge-status {{ ticket.status|lower }}">{{ ticket.status }}</span>
+                        </td>
+                        <td class="ticket-date">{{ ticket.created_at|date:"M d, Y" }}</td>
+                        <td class="text-right">
+                            <a href="{% url 'support:ticket_detail' ticket.ticket_id %}" class="btn-view">View</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-content">
+                                <p>No support tickets found.</p>
+                                <a href="{% url 'support:create_ticket' %}" class="empty-action-link">Raise your first ticket</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .tickets-list-container {
+        max-width: 900px;
+        margin: 35px auto;
+        padding: 0 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .tickets-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .tickets-header-row h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: #191919;
+        margin: 0 0 4px 0;
+    }
+
+    .tickets-header-row p {
+        font-size: 13px;
+        color: #666;
+        margin: 0;
+    }
+
+    .btn-create-ticket {
+        background: #0a66c2;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background 0.2s;
+    }
+    .btn-create-ticket:hover { background: #004182; }
+
+    .tickets-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        overflow: hidden;
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .linkedin-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .linkedin-table th {
+        background: #f9f9f9;
+        color: #666;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .linkedin-table td {
+        padding: 14px 16px;
+        font-size: 13.5px;
+        color: #333;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    .linkedin-table tbody tr:hover {
+        background: #fafafa;
+    }
+
+    .ticket-id {
+        font-family: monospace;
+        background: #f3f2ef;
+        padding: 3px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        color: #0a66c2;
+    }
+
+    .ticket-subject-cell {
+        font-weight: 500;
+        color: #191919;
+    }
+
+    .badge-priority {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .badge-status {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #e8f3fc;
+        color: #0a66c2;
+    }
+    .badge-status.closed { background: #f3f2ef; color: #666; }
+
+    .ticket-date {
+        color: #666;
+        font-size: 13px;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .btn-view {
+        background: transparent;
+        color: #0a66c2;
+        border: 1px solid #0a66c2;
+        padding: 5px 12px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .btn-view:hover {
+        background: #e8f3fc;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px !important;
+    }
+
+    .empty-content p {
+        color: #666;
+        font-size: 14px;
+        margin: 0 0 8px 0;
+    }
+
+    .empty-action-link {
+        color: #0a66c2;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .empty-action-link:hover { text-decoration: underline; }
+</style>
+{% endblock %}

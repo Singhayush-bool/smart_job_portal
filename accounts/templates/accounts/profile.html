@@ -1,0 +1,484 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}My Profile - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="home-layout">
+
+    <!-- ========================= -->
+    <!-- LEFT SIDEBAR (QUICK PROFILE & STATS) -->
+    <!-- ========================= -->
+    <aside class="left-sidebar">
+        <div class="card profile-card">
+            <div class="profile-banner"></div>
+            <div class="profile-avatar-wrapper">
+                {% if user.role == 'employer' or user.user_type == 'employer' %}
+                    {% if profile.profile_image %}
+                        <img src="{{ profile.profile_image.url }}" alt="Company Logo" class="profile-image">
+                    {% else %}
+                        <div class="profile-placeholder">🏢</div>
+                    {% endif %}
+                {% elif user.role == 'admin' or user.is_superuser %}
+                    <div class="profile-placeholder admin-badge-bg">👑</div>
+                {% else %}
+                    {% if profile.profile_image %}
+                        <img src="{{ profile.profile_image.url }}" alt="Profile Picture" class="profile-image">
+                    {% else %}
+                        <div class="profile-placeholder">{{ user.username|first|upper }}</div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="profile-info">
+                <h2>
+                    {% if user.role == 'employer' or user.user_type == 'employer' %}
+                        {% if profile.company_name %}{{ profile.company_name }}{% else %}{{ user.first_name }} {{ user.last_name }}{% endif %}
+                    {% elif user.first_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </h2>
+                <p class="username">@{{ user.username }}</p>
+                
+                <!-- ROLE BADGE -->
+                {% if user.role == 'employer' or user.user_type == 'employer' %}
+                    <span class="role-badge badge-employer">Employer / Recruiter</span>
+                {% elif user.role == 'admin' or user.is_superuser %}
+                    <span class="role-badge badge-admin">System Administrator</span>
+                {% else %}
+                    <span class="role-badge badge-jobseeker">Job Seeker</span>
+                {% endif %}
+
+                <!-- LOCATION -->
+                <p class="user-location">📍 {% if profile.location %}{{ profile.location }}{% else %}Location not added{% endif %}</p>
+
+                <div class="sidebar-stats">
+                    <div class="stat-row" onclick="openModal('followersModal')">
+                        <span>Followers</span>
+                        <strong>{{ followers_count|default:0 }}</strong>
+                    </div>
+                    <div class="stat-row" onclick="openModal('followingModal')">
+                        <span>Following</span>
+                        <strong>{{ following_count|default:0 }}</strong>
+                    </div>
+                    <div class="stat-row" onclick="openModal('connectionsModal')">
+                        <span>Connections</span>
+                        <strong>{{ connections|length|default:0 }}</strong>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-secondary" onclick="toggleEditProfileForm()" style="width: 100%; margin-top: 4px;">✏️ Edit Profile</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT SECTION -->
+    <!-- ========================= -->
+    <section class="feed-section">
+
+        <!-- EDIT PROFILE FORM (HIDDEN BY DEFAULT) -->
+        <div id="edit-profile-card" class="card section-card" style="display: none; border: 2px solid var(--primary-color);">
+            <div class="section-head-bar">
+                <h2>✏️ Edit Profile Information</h2>
+                <button type="button" class="btn-close-form" onclick="toggleEditProfileForm()">✖ Close</button>
+            </div>
+            
+            <form method="POST" action="{% url 'accounts:profile' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label>📸 Profile Photo / Logo:</label>
+                        <input type="file" name="profile_image" accept="image/*" class="form-control">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><label>First Name:</label><input type="text" name="first_name" value="{{ user.first_name }}" class="form-control"></div>
+                        <div><label>Last Name:</label><input type="text" name="last_name" value="{{ user.last_name }}" class="form-control"></div>
+                    </div>
+
+                    {% if user.role == 'employer' or user.user_type == 'employer' %}
+                        <div><label>Company Name:</label><input type="text" name="company_name" value="{{ profile.company_name|default:'' }}" class="form-control"></div>
+                        <div><label>Company Website:</label><input type="url" name="website_url" value="{{ profile.website_url|default:'' }}" class="form-control"></div>
+                    {% endif %}
+
+                    <div><label>Location:</label><input type="text" name="location" value="{{ profile.location|default:'' }}" class="form-control"></div>
+                    <div><label>{% if user.role == 'employer' or user.user_type == 'employer' %}About Company{% else %}About / Bio{% endif %}:</label><textarea name="bio" rows="3" class="form-control">{{ profile.bio|default:'' }}</textarea></div>
+
+                    {% if user.role != 'employer' and user.user_type != 'employer' and not user.is_superuser %}
+                        <div><label>LinkedIn URL:</label><input type="url" name="linkedin_url" value="{{ profile.linkedin_url|default:'' }}" class="form-control"></div>
+                        <div><label>GitHub URL:</label><input type="url" name="github_url" value="{{ profile.github_url|default:'' }}" class="form-control"></div>
+                        <div><label>Portfolio URL:</label><input type="url" name="portfolio_url" value="{{ profile.portfolio_url|default:'' }}" class="form-control"></div>
+                    {% endif %}
+                </div>
+                <div style="margin-top: 16px; display: flex; gap: 10px;">
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                    <button type="button" class="btn-secondary" onclick="toggleEditProfileForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ABOUT / SUMMARY CARD -->
+        <div class="card section-card">
+            <h2>{% if user.role == 'employer' or user.user_type == 'employer' %}About Company{% else %}About{% endif %}</h2>
+            <p class="bio-text">
+                {% if profile.bio %}
+                    {{ profile.bio }}
+                {% else %}
+                    <span class="empty-text">No summary or details added yet. Click "Edit Profile" to add.</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- ROLE SPECIFIC SECTIONS -->
+        {% if user.role == 'employer' or user.user_type == 'employer' %}
+            <div class="card section-card">
+                <h2>🏢 Recruiter Quick Actions</h2>
+                <div class="social-links-grid">
+                    <a href="{% url 'accounts:create_job' %}" class="social-chip">➕ Post a New Job</a>
+                    <a href="{% url 'accounts:employer_jobs' %}" class="social-chip">💼 Manage Job Postings</a>
+                    <a href="{% url 'accounts:employer_company' %}" class="social-chip">⚙️ Company Profile</a>
+                    {% if profile.website_url %}
+                        <a href="{{ profile.website_url }}" target="_blank" class="social-chip">🌐 Website ↗</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        {% elif user.role == 'admin' or user.is_superuser %}
+            <div class="card section-card">
+                <h2>🛡️ Administrator Details</h2>
+                <div class="admin-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                    <p><strong>Account Created:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                    <p><strong>Last Login:</strong> {{ user.last_login|date:"F d, Y" }}</p>
+                    <p><strong>Superuser:</strong> {% if user.is_superuser %}Yes{% else %}No{% endif %}</p>
+                    <p><strong>Staff Status:</strong> Active</p>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="card section-card">
+                <div class="completion-header">
+                    <h3>Profile Completion</h3>
+                    <span class="completion-pct">{{ completion }}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: {{ completion }}%;"></div>
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <h2>Professional Links</h2>
+                <div class="social-links-grid">
+                    {% if profile.linkedin_url %}<a href="{{ profile.linkedin_url }}" target="_blank" class="social-chip">LinkedIn ↗</a>{% endif %}
+                    {% if profile.github_url %}<a href="{{ profile.github_url }}" target="_blank" class="social-chip">GitHub ↗</a>{% endif %}
+                    {% if profile.portfolio_url %}<a href="{{ profile.portfolio_url }}" target="_blank" class="social-chip">Portfolio ↗</a>{% endif %}
+                    {% if not profile.linkedin_url and not profile.github_url and not profile.portfolio_url %}
+                        <p class="empty-text">No links added yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="section-head-bar">
+                    <h2>Education</h2>
+                    <a href="{% url 'accounts:add_education' %}" class="btn-action-outline">+ Add</a>
+                </div>
+                <div class="items-list">
+                    {% for edu in profile.education.all %}
+                        <div class="item-row">
+                            <div>
+                                <strong>{{ edu.degree }} in {{ edu.field_of_study }}</strong>
+                                <p class="sub-detail">{{ edu.institution }} | {{ edu.start_year }} - {{ edu.end_year }}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="empty-text">No education added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="section-head-bar">
+                    <h2>Experience</h2>
+                    <a href="{% url 'accounts:add_experience' %}" class="btn-action-outline">+ Add</a>
+                </div>
+                <div class="items-list">
+                    {% for exp in profile.experience.all %}
+                        <div class="item-row">
+                            <div>
+                                <strong>{{ exp.job_title }}</strong>
+                                <p class="sub-detail">{{ exp.company_name }} | {{ exp.start_date|date:"M Y" }} - {% if exp.is_current %}Present{% else %}{{ exp.end_date|date:"M Y" }}{% endif %}</p>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <p class="empty-text">No experience added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card section-card">
+                <div class="section-head-bar">
+                    <h2>Skills</h2>
+                    <a href="{% url 'accounts:add_skill' %}" class="btn-action-outline">+ Add</a>
+                </div>
+                <div class="items-list">
+                    {% for item in profile.skills.all %}
+                        <div class="item-row">
+                            <div>
+                                <strong>{{ item.skill.name }}</strong>
+                                <p class="sub-detail">Experience: {{ item.experience_years }} years</p>
+                            </div>
+                            <a href="{% url 'accounts:remove_skill' item.id %}" class="link-danger">Remove</a>
+                        </div>
+                    {% empty %}
+                        <p class="empty-text">No skills added yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+    </section>
+
+    <!-- ========================= -->
+    <!-- RIGHT SIDEBAR (DASHBOARD & QUICK LINKS) -->
+    <!-- ========================= -->
+    <aside class="right-sidebar">
+        <div class="card suggestion-card">
+            <h3>🚀 Navigation</h3>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;">
+                <a href="{% url 'accounts:dashboard' %}" class="link-btn">📊 Go to Dashboard</a>
+                {% if user.role == 'employer' or user.user_type == 'employer' %}
+                    <a href="{% url 'accounts:create_job' %}" class="link-btn">➕ Post New Job</a>
+                {% elif not user.is_superuser %}
+                    <a href="{% url 'accounts:resume_list' %}" class="link-btn">📄 Manage Resumes</a>
+                {% endif %}
+            </div>
+        </div>
+    </aside>
+
+</div>
+
+<!-- MODALS -->
+<div id="followersModal" class="insta-modal-overlay">
+    <div class="insta-modal-box">
+        <div class="insta-modal-header">
+            <h3>Followers ({{ followers_count|default:0 }})</h3>
+            <button type="button" class="insta-close-btn" onclick="closeModal('followersModal')">&times;</button>
+        </div>
+        <div class="insta-modal-body">
+            <ul class="modal-user-list">
+                {% for person in followers %}
+                    <li class="modal-user-item">
+                        <a href="{% url 'accounts:user_profile' person.id %}" class="modal-user-link">
+                            <div class="modal-avatar">{{ person.username|first|upper }}</div>
+                            <div class="modal-user-info">
+                                <span class="modal-name">{{ person.get_full_name|default:person.username }}</span>
+                                <span class="modal-handle">@{{ person.username }}</span>
+                            </div>
+                        </a>
+                    </li>
+                {% empty %}
+                    <p class="empty-text" style="text-align: center; padding: 20px;">No followers yet.</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="followingModal" class="insta-modal-overlay">
+    <div class="insta-modal-box">
+        <div class="insta-modal-header">
+            <h3>Following ({{ following_count|default:0 }})</h3>
+            <button type="button" class="insta-close-btn" onclick="closeModal('followingModal')">&times;</button>
+        </div>
+        <div class="insta-modal-body">
+            <ul class="modal-user-list">
+                {% for person in following_users %}
+                    <li class="modal-user-item">
+                        <a href="{% url 'accounts:user_profile' person.id %}" class="modal-user-link">
+                            <div class="modal-avatar">{{ person.username|first|upper }}</div>
+                            <div class="modal-user-info">
+                                <span class="modal-name">{{ person.get_full_name|default:person.username }}</span>
+                                <span class="modal-handle">@{{ person.username }}</span>
+                            </div>
+                        </a>
+                    </li>
+                {% empty %}
+                    <p class="empty-text" style="text-align: center; padding: 20px;">Not following anyone yet.</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div id="connectionsModal" class="insta-modal-overlay">
+    <div class="insta-modal-box">
+        <div class="insta-modal-header">
+            <h3>Connections ({{ connections|length|default:0 }})</h3>
+            <button type="button" class="insta-close-btn" onclick="closeModal('connectionsModal')">&times;</button>
+        </div>
+        <div class="insta-modal-body">
+            <ul class="modal-user-list">
+                {% for person in connections %}
+                    <li class="modal-user-item">
+                        <a href="{% url 'accounts:user_profile' person.id %}" class="modal-user-link">
+                            <div class="modal-avatar">{{ person.username|first|upper }}</div>
+                            <div class="modal-user-info">
+                                <span class="modal-name">{{ person.get_full_name|default:person.username }}</span>
+                                <span class="modal-handle">@{{ person.username }}</span>
+                            </div>
+                        </a>
+                    </li>
+                {% empty %}
+                    <p class="empty-text" style="text-align: center; padding: 20px;">No connections yet.</p>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+    window.onclick = function(event) {
+        if (event.target.classList.contains('insta-modal-overlay')) {
+            event.target.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
+    function toggleEditProfileForm() {
+        const formCard = document.getElementById('edit-profile-card');
+        if (formCard.style.display === 'none' || formCard.style.display === '') {
+            formCard.style.display = 'block';
+            formCard.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            formCard.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    :root {
+        --primary-color: #0a66c2;
+        --primary-hover: #004182;
+        --bg-color: #f3f2ef;
+        --card-bg: #ffffff;
+        --text-color: #191919;
+        --text-muted: #666666;
+        --border-color: #e0e0e0;
+        --radius: 10px;
+        --shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    body { background-color: var(--bg-color); color: var(--text-color); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    
+    .home-layout { 
+        display: grid; 
+        grid-template-columns: 275px 1fr 285px; 
+        gap: 24px; 
+        max-width: 1200px; 
+        margin: 24px auto; 
+        padding: 0 16px; 
+        align-items: start; 
+    }
+    
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+    
+    /* Left sidebar ab scroll ke sath move karegi, right wali sticky rahegi */
+    .left-sidebar { position: relative; }
+    .right-sidebar { position: sticky; top: 76px; }
+
+    /* LinkedIn Style Profile Card */
+    .profile-card { text-align: center; position: relative; padding-bottom: 16px; }
+    .profile-banner { height: 64px; background: #a0b4b7; background-image: linear-gradient(135deg, #7191a3 0%, #29526b 100%); }
+    .profile-avatar-wrapper { margin-top: -42px; margin-bottom: 10px; display: flex; justify-content: center; }
+    .profile-image, .profile-placeholder { width: 84px; height: 84px; border-radius: 50%; border: 3px solid #ffffff; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .profile-image { object-fit: cover; }
+    .profile-placeholder { background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 32px; }
+    .admin-badge-bg { background: #333; font-size: 26px; }
+    
+    .profile-info { padding: 0 16px; text-align: center; }
+    .profile-info h2 { font-size: 18px; font-weight: 600; color: #191919; margin: 0; line-height: 1.3; }
+    .profile-info .username { color: var(--text-muted); font-size: 12px; margin: 2px 0 6px; }
+
+    .role-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-bottom: 6px; }
+    .badge-admin { background: #fee2e2; color: #dc2626; }
+    .badge-employer { background: #fef3c7; color: #d97706; }
+    .badge-jobseeker { background: #dbeafe; color: #2563eb; }
+
+    .user-location { font-size: 12px; color: var(--text-muted); margin: 0 0 12px 0; }
+
+    .sidebar-stats { border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding: 10px 0; margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: background 0.15s; font-size: 12px; }
+    .stat-row:hover { background: rgba(0,0,0,0.04); }
+    .stat-row span { color: var(--text-muted); font-weight: 500; }
+    .stat-row strong { color: var(--primary-color); font-weight: 600; }
+
+    /* Main Section Cards */
+    .section-card { padding: 20px; }
+    .section-card h2 { font-size: 16px; font-weight: 600; color: #191919; margin: 0 0 12px 0; }
+    .section-head-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .bio-text { font-size: 13px; line-height: 1.5; color: #333; margin: 0; }
+    .empty-text { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+    /* Completion Bar */
+    .completion-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .completion-header h3 { font-size: 14px; font-weight: 600; margin: 0; }
+    .completion-pct { font-weight: 700; color: var(--primary-color); font-size: 14px; }
+    .progress-bar-bg { width: 100%; background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden; }
+    .progress-bar-fill { background: var(--primary-color); height: 100%; border-radius: 4px; }
+
+    /* Lists & Chips */
+    .social-links-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+    .social-chip { background: #f3f2ef; color: var(--primary-color); padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid var(--border-color); }
+    .items-list { display: flex; flex-direction: column; gap: 10px; }
+    .item-row { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+    .sub-detail { font-size: 12px; color: var(--text-muted); margin: 2px 0 0 0; }
+    .link-danger { color: #d93025; font-weight: 600; text-decoration: none; font-size: 12px; }
+
+    /* Form Controls */
+    .form-control { width: 100%; box-sizing: border-box; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+    .form-control:focus { border-color: var(--primary-color); }
+    label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 12px; color: var(--text-muted); }
+
+    /* Buttons */
+    .btn-primary { background: var(--primary-color); color: #fff; padding: 7px 16px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 600; border: none; cursor: pointer; display: inline-block; }
+    .btn-secondary { border: 1px solid var(--primary-color); color: var(--primary-color); padding: 6px 14px; border-radius: 20px; text-decoration: none; font-size: 12px; font-weight: 600; display: inline-block; background: transparent; cursor: pointer; text-align: center; }
+    .btn-action-outline { border: 1px solid var(--border-color); color: var(--primary-color); padding: 4px 10px; border-radius: 14px; font-size: 11px; font-weight: 600; text-decoration: none; }
+    .btn-close-form { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 13px; }
+
+    /* Modals */
+    .insta-modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); align-items: center; justify-content: center; }
+    .insta-modal-box { background: #fff; width: 100%; max-width: 380px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column; max-height: 75vh; }
+    .insta-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); }
+    .insta-modal-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
+    .insta-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); }
+    .insta-modal-body { padding: 8px 12px; overflow-y: auto; max-height: 300px; }
+    .modal-user-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .modal-user-link { display: flex; align-items: center; gap: 10px; text-decoration: none; padding: 6px; border-radius: 6px; transition: background 0.2s; }
+    .modal-user-link:hover { background: #f0f2f5; }
+    .modal-avatar { width: 36px; height: 36px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+    .modal-user-info { display: flex; flex-direction: column; }
+    .modal-name { font-size: 13px; font-weight: 600; color: var(--text-color); }
+    .modal-handle { font-size: 11px; color: var(--text-muted); }
+
+    .link-btn { color: var(--primary-color); text-decoration: none; font-size: 13px; font-weight: 600; display: block; padding: 4px 0; }
+    .link-btn:hover { text-decoration: underline; }
+    .suggestion-card { padding: 16px; }
+    .suggestion-card h3 { font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+
+    @media (max-width: 992px) { 
+        .home-layout { grid-template-columns: 240px 1fr; } 
+        .right-sidebar { display: none; } 
+    }
+    @media (max-width: 688px) { 
+        .home-layout { display: block; } 
+        .left-sidebar { position: static; margin-bottom: 16px; } 
+    }
+</style>
+{% endblock %}

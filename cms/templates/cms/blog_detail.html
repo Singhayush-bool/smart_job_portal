@@ -1,0 +1,169 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ blog.meta_title|default:blog.title }} - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="blog-detail-wrapper">
+    <div class="mb-3">
+        <a href="{% url 'cms:blog_list' %}" class="back-feed-link">&larr; Back to Feed</a>
+    </div>
+
+    <!-- Main Blog Article Card -->
+    <article class="blog-article-card">
+        <div class="article-header">
+            <div class="author-avatar-lg">{{ blog.author|slice:":1"|upper }}</div>
+            <div>
+                <h2 class="article-author-name">{{ blog.author }}</h2>
+                <p class="article-date">{{ blog.created_at|date:"F d, Y • h:i A" }}</p>
+            </div>
+            <span class="article-category-badge">{{ blog.get_category_display }}</span>
+        </div>
+
+        <h1 class="article-title">{{ blog.title }}</h1>
+
+        {% if blog.featured_image %}
+            <div class="article-image-box">
+                <img src="{{ blog.featured_image.url }}" alt="{{ blog.title }}">
+            </div>
+        {% endif %}
+
+        <div class="article-content-body">
+            {{ blog.content|linebreaks }}
+        </div>
+
+        <!-- Social Bar (Counts) -->
+        <div class="article-social-bar">
+            <span>❤️ {{ blog.likes.count }} Likes</span>
+            <span>💬 {{ blog.comments.count }} Comments</span>
+        </div>
+
+        <!-- Interactive Actions (Like & Unlike supported) -->
+        <div class="article-actions-row">
+            <a href="{% url 'cms:toggle_blog_like' blog.slug %}" class="action-btn-interactive {% if is_liked %}liked-state{% endif %}">
+                ❤️ {% if is_liked %}Liked{% else %}Like{% endif %}
+            </a>
+            <button class="action-btn-interactive" onclick="document.getElementById('commentInputBox').focus();">
+                💬 Comment
+            </button>
+        </div>
+    </article>
+
+    <!-- Comments Section -->
+    <div class="comments-section-card">
+        <h3>Discussion & Comments ({{ blog.comments.count }})</h3>
+
+        {% if user.is_authenticated %}
+        <form method="POST" class="comment-form">
+            {% csrf_token %}
+            <div class="comment-input-wrapper">
+                <div class="comment-user-badge">{{ user.username|slice:":1"|upper }}</div>
+                <textarea name="comment_content" id="commentInputBox" rows="2" placeholder="What are your thoughts?" required></textarea>
+            </div>
+            <div class="comment-submit-row">
+                <button type="submit" class="btn-submit-comment">Post Comment</button>
+            </div>
+        </form>
+        {% else %}
+        <p class="login-to-comment">Please <a href="{% url 'accounts:login' %}">sign in</a> to join the conversation.</p>
+        {% endif %}
+
+        <div class="comments-list">
+            {% for comment in blog.comments.all.reverse %}
+                <div class="comment-item">
+                    <div class="comment-avatar">{{ comment.user.username|slice:":1"|upper }}</div>
+                    <div class="comment-content-bubble">
+                        <div class="comment-user-meta">
+                            <strong>{{ comment.user.username }}</strong>
+                            <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                        </div>
+                        <p>{{ comment.content }}</p>
+                        
+                        <!-- Delete Comment Option (Only visible to the comment author) -->
+                        {% if user == comment.user %}
+                        <div class="comment-actions-footer">
+                            <a href="{% url 'cms:delete_blog_comment' comment.id %}" class="delete-comment-link" onclick="return confirm('Are you sure you want to delete this comment?');">Delete</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p class="no-comments-text">No comments yet. Be the first to share your thoughts!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    body { background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .blog-detail-wrapper { max-width: 760px; margin: 30px auto; padding: 0 16px; }
+    .back-feed-link { color: #0a66c2; text-decoration: none; font-weight: 600; font-size: 14px; }
+    .back-feed-link:hover { text-decoration: underline; }
+
+    .blog-article-card, .comments-section-card {
+        background: #fff;
+        border: 1px solid #e1e4e8;
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        margin-bottom: 20px;
+    }
+
+    .article-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+    .author-avatar-lg { width: 50px; height: 50px; background: linear-gradient(135deg, #0a66c2, #004182); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 20px; }
+    .article-author-name { margin: 0; font-size: 16px; font-weight: 600; color: #1f2328; }
+    .article-date { margin: 2px 0 0 0; font-size: 12px; color: #57606a; }
+    .article-category-badge { margin-left: auto; background: #ddf4ff; color: #0969da; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600; text-transform: uppercase; }
+
+    .article-title { font-size: 26px; font-weight: 700; color: #1f2328; margin-bottom: 20px; line-height: 1.3; }
+    .article-image-box img { width: 100%; max-height: 420px; object-fit: cover; border-radius: 10px; margin-bottom: 20px; }
+    .article-content-body { font-size: 16px; line-height: 1.8; color: #24292f; margin-bottom: 24px; }
+
+    .article-social-bar { display: flex; justify-content: space-between; font-size: 13px; color: #57606a; border-top: 1px solid #eaeef2; border-bottom: 1px solid #eaeef2; padding: 10px 4px; margin-bottom: 12px; }
+    .article-actions-row { display: flex; justify-content: space-around; gap: 10px; margin-bottom: 10px; }
+    
+    .action-btn-interactive {
+        flex: 1;
+        background: #f6f8fa;
+        border: 1px solid #d0d7de;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 14px;
+        color: #24292f;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        display: inline-block;
+    }
+    .action-btn-interactive:hover { background: #eaeef2; color: #0969da; }
+    .liked-state { color: #0a66c2; border-color: #0a66c2; background: #eef3f8; }
+
+    .comments-section-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; color: #1f2328; }
+    .comment-form { margin-bottom: 24px; }
+    .comment-input-wrapper { display: flex; gap: 12px; align-items: flex-start; }
+    .comment-user-badge { width: 38px; height: 38px; background: #0a66c2; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+    .comment-form textarea { width: 100%; border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; font-size: 14px; outline: none; resize: vertical; box-sizing: border-box; }
+    .comment-form textarea:focus { border-color: #0969da; box-shadow: 0 0 0 3px rgba(9,105,218,0.15); }
+    .comment-submit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .btn-submit-comment { background: #0a66c2; color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .btn-submit-comment:hover { background: #004182; }
+
+    .comments-list { display: flex; flex-direction: column; gap: 16px; margin-top: 20px; }
+    .comment-item { display: flex; gap: 12px; align-items: flex-start; }
+    .comment-avatar { width: 34px; height: 34px; background: #6e7781; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+    .comment-content-bubble { background: #f6f8fa; border-radius: 10px; padding: 12px 16px; flex: 1; border: 1px solid #eaeef2; }
+    .comment-user-meta { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .comment-user-meta strong { color: #1f2328; }
+    .comment-time { color: #57606a; font-size: 11px; }
+    .comment-content-bubble p { margin: 0; font-size: 13.5px; color: #24292f; line-height: 1.4; }
+    
+    .comment-actions-footer { margin-top: 6px; display: flex; justify-content: flex-end; }
+    .delete-comment-link { font-size: 11.5px; color: #cf222e; text-decoration: none; font-weight: 600; }
+    .delete-comment-link:hover { text-decoration: underline; }
+
+    .no-comments-text { color: #57606a; font-size: 14px; font-style: italic; text-align: center; padding: 15px; }
+    .login-to-comment { font-size: 14px; color: #57606a; }
+    .login-to-comment a { color: #0a66c2; font-weight: 600; text-decoration: none; }
+</style>
+{% endblock %}

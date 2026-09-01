@@ -1,0 +1,262 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}AI Career Copilot - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="ai-copilot-wrapper">
+
+    <!-- HEADER -->
+    <div class="copilot-card hero-header">
+        <div class="hero-content">
+            <h2>🤖 AI Career Copilot</h2>
+            <p>Upload resume, scan ATS match, generate cover letters, or create AI job descriptions side-by-side.</p>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <!-- MAIN GRID -->
+    <div class="copilot-grid">
+
+        <!-- LEFT PANEL -->
+        <div class="copilot-card form-section">
+            <h3 class="section-title">📄 Input Details</h3>
+            
+            <form method="POST" action="" enctype="multipart/form-data" class="copilot-form">
+                {% csrf_token %}
+
+                <div class="input-group">
+                    <label for="job_title">Job Title / Role</label>
+                    <input type="text" id="job_title" name="job_title" value="{{ job_title|default:'' }}" placeholder="e.g. Senior Java Developer" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="resume_file">Upload Resume (PDF or DOCX)</label>
+                    <div class="file-upload-box">
+                        <input type="file" id="resume_file" name="resume_file" accept=".pdf,.doc,.docx" onchange="updateFileName(this)">
+                        <span id="file-label-text">📁 Drag & drop or click to upload PDF/DOCX</span>
+                    </div>
+                </div>
+
+                <details class="text-fallback-details" {% if extracted_text %}open{% endif %}>
+                    <summary>Or paste/view resume text manually</summary>
+                    <div class="input-group" style="margin-top: 8px;">
+                        <textarea id="resume_text" name="resume_text" rows="4" placeholder="Paste resume text here...">{{ extracted_text|default:'' }}</textarea>
+                    </div>
+                </details>
+
+                <div class="input-group" style="margin-top: 14px;">
+                    <div class="jd-label-wrapper">
+                        <label for="job_description">Paste Job Description (JD)</label>
+                        <button type="submit" name="action_type" value="generate_jd" class="btn-link-ai" formnovalidate>
+                            ✨ Generate AI JD
+                        </button>
+                    </div>
+                    <textarea id="job_description" name="job_description" rows="6" placeholder="Paste JD or click 'Generate AI JD' above...">{{ job_description|default:'' }}</textarea>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="btn-actions-wrapper">
+                    <button type="submit" name="action_type" value="analyze_resume" class="btn-primary-ai">
+                        🔍 Extract & Scan ATS
+                    </button>
+                    <button type="submit" name="action_type" value="generate_cover_letter" class="btn-secondary-ai">
+                        ✍️ Generate Cover Letter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="copilot-card results-section">
+            <h3 class="section-title">📊 Extracted Data & AI Output</h3>
+
+            {% if result_type == "analysis" %}
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-value">{{ ats_score }}%</span>
+                        <span class="metric-label">ATS Score</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-value">{{ resume_score }}%</span>
+                        <span class="metric-label">Match Score</span>
+                    </div>
+                </div>
+
+                <div class="result-block">
+                    <h4>⚠️ Skill Gaps / Missing Keywords:</h4>
+                    <div class="tags-container">
+                        {% for skill in missing_skills %}
+                            <span class="badge-tag tag-missing">{{ skill }}</span>
+                        {% empty %}
+                            <p class="text-muted">No major missing skills found.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="result-block">
+                    <h4>💡 AI Improvement Suggestions:</h4>
+                    <ul class="feedback-list">
+                        {% for sug in suggestions %}
+                            <li>{{ sug }}</li>
+                        {% empty %}
+                            <p class="text-muted">No specific suggestions generated.</p>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+            {% elif result_type == "cover_letter" %}
+                <div class="output-wrapper">
+                    <div class="output-header">
+                        <h4>✍️ Generated Cover Letter</h4>
+                        <button onclick="copyOutput('letterText')" class="btn-copy">📋 Copy Text</button>
+                    </div>
+                    <div class="output-body" id="letterText">{{ cover_letter_content|linebreaks }}</div>
+                </div>
+
+            {% elif result_type == "generated_jd" %}
+                <div class="output-wrapper">
+                    <div class="output-header">
+                        <h4>📄 AI Generated Job Description</h4>
+                        <button onclick="copyOutput('jdText')" class="btn-copy">📋 Copy Text</button>
+                    </div>
+                    <div class="output-body" id="jdText">{{ generated_jd_content|linebreaks }}</div>
+                </div>
+
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    <h4>Upload & Run AI Tools</h4>
+                    <p>Select your resume, paste or generate a JD on the left, and choose an action to display analysis here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function updateFileName(input) {
+        const label = document.getElementById('file-label-text');
+        if (input.files && input.files[0]) {
+            label.textContent = '📄 Selected: ' + input.files[0].name;
+            label.style.color = '#0a66c2';
+            label.style.fontWeight = '600';
+        }
+    }
+
+    function copyOutput(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('Copied to clipboard!');
+        });
+    }
+</script>
+
+<style>
+    :root {
+        --primary-blue: #0a66c2;
+        --purple-ai: #6b21a8;
+        --purple-light: #f3e8ff;
+        --card-bg: #ffffff;
+        --border-light: #e0e0e0;
+        --radius-lg: 12px;
+        --radius-md: 8px;
+    }
+
+    .ai-copilot-wrapper {
+        max-width: 1128px;
+        margin: 20px auto;
+        padding: 0 15px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .copilot-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin-bottom: 20px;
+    }
+
+    .hero-header {
+        background: linear-gradient(135deg, #f3e8ff 0%, #eef2ff 100%);
+        border-color: #d8b4fe;
+    }
+
+    .hero-content h2 { margin: 0 0 6px 0; color: var(--purple-ai); font-size: 24px; font-weight: 700; }
+    .hero-content p { margin: 0; color: #666; font-size: 14px; }
+
+    .alert-error {
+        background: #fee2e2;
+        color: #991b1b;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        margin-bottom: 16px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .copilot-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .section-title {
+        margin: 0 0 18px 0;
+        font-size: 16px;
+        font-weight: 600;
+        border-bottom: 2px solid var(--border-light);
+        padding-bottom: 10px;
+    }
+
+    .input-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-size: 13px; font-weight: 600; }
+
+    .jd-label-wrapper { display: flex; justify-content: space-between; align-items: center; }
+    .btn-link-ai { background: none; border: none; color: var(--purple-ai); font-size: 12px; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+    .file-upload-box {
+        position: relative;
+        border: 2px dashed #b8c7d9;
+        background: #f8fafc;
+        border-radius: var(--radius-md);
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+    }
+    .file-upload-box input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+    .input-group input[type="text"], .input-group textarea {
+        width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid var(--border-light); border-radius: var(--radius-md); font-size: 13px;
+    }
+
+    .btn-actions-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+    .btn-primary-ai, .btn-secondary-ai { padding: 10px; border: none; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; color: #fff; }
+    .btn-primary-ai { background: var(--purple-ai); }
+    .btn-secondary-ai { background: var(--primary-blue); }
+
+    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .metric-box { background: var(--purple-light); padding: 16px; border-radius: var(--radius-md); text-align: center; border: 1px solid #e9d5ff; }
+    .metric-value { display: block; font-size: 28px; font-weight: 700; color: var(--purple-ai); }
+    .metric-label { font-size: 12px; color: #666; font-weight: 600; }
+
+    .badge-tag { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; background: #fee2e2; color: #991b1b; }
+    .output-wrapper { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 16px; }
+    .output-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .btn-copy { background: #fff; border: 1px solid var(--border-light); padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .output-body { font-size: 13px; line-height: 1.6; white-space: pre-line; color: #1e293b; }
+
+    .empty-state { text-align: center; padding: 40px 10px; color: #666; }
+    .empty-icon { font-size: 40px; margin-bottom: 10px; }
+
+    @media (max-width: 768px) {
+        .copilot-grid, .btn-actions-wrapper { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}

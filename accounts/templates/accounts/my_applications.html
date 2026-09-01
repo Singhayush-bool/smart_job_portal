@@ -1,0 +1,80 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}My Applications - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="applications-container">
+
+    <div class="card page-header">
+        <div>
+            <h2>📝 My Job Applications</h2>
+            <p>Track the status of positions you have applied for.</p>
+        </div>
+        <a href="{% url 'accounts:job_list' %}" class="btn-secondary">Explore Jobs</a>
+    </div>
+
+    <div class="applications-list">
+        {% for application in applications %}
+            <div class="card application-card">
+                <div class="app-header">
+                    <div>
+                        <h3 class="job-title">{{ application.job.title }}</h3>
+                        <p class="company-name">🏢 {{ application.job.company.name }}</p>
+                    </div>
+                    <span class="status-pill status-{{ application.status }}">
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="app-details-grid">
+                    <div>📍 <strong>Location:</strong> {{ application.job.location }}</div>
+                    <div>📅 <strong>Applied Date:</strong> {{ application.applied_at|date:"M d, Y" }}</div>
+                    {% if application.resume %}
+                        <div>📄 <strong>Resume Used:</strong> {{ application.resume.title }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="app-actions">
+                    <a href="{% url 'accounts:job_detail' application.job.id %}" class="btn-action-sm">View Posting ↗</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card empty-state">
+                <div class="empty-icon">📂</div>
+                <h3>No Applications Found</h3>
+                <p>You haven't submitted job applications yet.</p>
+                <a href="{% url 'accounts:job_list' %}" class="btn-primary">Browse Jobs</a>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .applications-container { max-width: 850px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    
+    .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .page-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; }
+    .page-header p { margin: 0; color: #666; font-size: 14px; }
+
+    .app-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+    .job-title { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; color: #191919; }
+    .company-name { font-size: 14px; color: #0a66c2; font-weight: 600; margin: 0; }
+
+    .status-pill { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: capitalize; }
+    .status-applied { background: #e8f0fe; color: #0a66c2; }
+    .status-shortlisted { background: #fef7e0; color: #b06000; }
+    .status-interview { background: #f3e8fd; color: #681da8; }
+    .status-selected { background: #e6f4ea; color: #137333; }
+    .status-rejected { background: #fce8e6; color: #c5221f; }
+
+    .app-details-grid { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: #444; padding: 12px; background: #f8f9fa; border-radius: 8px; margin-bottom: 16px; }
+
+    .btn-action-sm { color: #0a66c2; font-weight: 600; font-size: 13px; text-decoration: none; }
+    .btn-primary { background: #0a66c2; color: #fff; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; display: inline-block; margin-top: 10px; }
+    .btn-secondary { border: 1px solid #e0e0e0; color: #666; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .empty-state { text-align: center; padding: 40px 20px; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+{% endblock %}

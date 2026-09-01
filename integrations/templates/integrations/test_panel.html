@@ -1,0 +1,375 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}SmartJobs - Integrations Test Panel{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <div class="header-banner">
+        <h1>SmartJobs Integration Test Panel</h1>
+        <span class="badge">API v1.0</span>
+    </div>
+
+    <div class="grid-layout">
+
+        <!-- 1. WhatsApp Testing -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <span class="icon">💬</span>
+                    <h2>1. WhatsApp Alert (Twilio)</h2>
+                </div>
+                <form id="whatsappForm">
+                    {% csrf_token %}
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" placeholder="e.g. +919876543210" required>
+
+                    <label for="wa-message">Message Body</label>
+                    <textarea id="wa-message" name="message" placeholder="Message Body">Your SmartJobs application has an update!</textarea>
+
+                    <button type="submit" id="whatsappForm-btn">
+                        <span class="btn-text">Send WhatsApp Message</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="whatsappResultWrapper" class="result-container">
+                <div class="result-header">
+                    <span id="whatsappStatus" class="status-tag"></span>
+                    <button type="button" class="clear-btn" onclick="clearResult('whatsappResultWrapper')">Clear</button>
+                </div>
+                <pre id="whatsappResult" class="result"></pre>
+            </div>
+        </div>
+
+        <!-- 2. Firebase Push Notification Testing -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <span class="icon">🔔</span>
+                    <h2>2. Push Notification (Firebase FCM)</h2>
+                </div>
+                <form id="pushForm">
+                    {% csrf_token %}
+                    <label for="token">Device FCM Token</label>
+                    <input type="text" id="token" name="token" placeholder="Paste FCM Device Token" required>
+
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" value="SmartJobs Alert">
+
+                    <label for="push-body">Notification Message</label>
+                    <textarea id="push-body" name="body" placeholder="Notification Message">You have a new interview invite!</textarea>
+
+                    <button type="submit" id="pushForm-btn">
+                        <span class="btn-text">Send Push Notification</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="pushResultWrapper" class="result-container">
+                <div class="result-header">
+                    <span id="pushStatus" class="status-tag"></span>
+                    <button type="button" class="clear-btn" onclick="clearResult('pushResultWrapper')">Clear</button>
+                </div>
+                <pre id="pushResult" class="result"></pre>
+            </div>
+        </div>
+
+        <!-- 3. Cloudinary Upload Testing -->
+        <div class="card">
+            <div>
+                <div class="card-header">
+                    <span class="icon">☁️</span>
+                    <h2>3. Cloud Media Upload (Cloudinary)</h2>
+                </div>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <label for="file">Select File</label>
+                    <input type="file" id="file" name="file" required>
+
+                    <button type="submit" id="uploadForm-btn">
+                        <span class="btn-text">Upload File to Cloudinary</span>
+                    </button>
+                </form>
+            </div>
+
+            <div id="uploadResultWrapper" class="result-container">
+                <div class="result-header">
+                    <span id="uploadStatus" class="status-tag"></span>
+                    <button type="button" class="clear-btn" onclick="clearResult('uploadResultWrapper')">Clear</button>
+                </div>
+                <pre id="uploadResult" class="result"></pre>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 15px;
+    }
+
+    .header-banner {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 2px solid var(--border-color, #e0e0e0);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .header-banner h1 {
+        font-size: 24px;
+        color: var(--text-color, #191919);
+        margin: 0;
+    }
+
+    .header-banner .badge {
+        background: var(--primary-color, #0a66c2);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .grid-layout {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: #ffffff;
+        border: 1px solid var(--border-color, #e0e0e0);
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .card-header h2 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .icon { font-size: 20px; }
+
+    .card label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        margin-top: 10px;
+        margin-bottom: 4px;
+    }
+
+    .card input, .card textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-color, #e0e0e0);
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .card textarea {
+        resize: vertical;
+        min-height: 70px;
+    }
+
+    .card button[type="submit"] {
+        margin-top: 16px;
+        width: 100%;
+        background: var(--primary-color, #0a66c2);
+        color: #ffffff;
+        border: none;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .card button[type="submit"]:hover {
+        background: var(--primary-hover, #004182);
+    }
+
+    .card button[type="submit"]:disabled {
+        background: #a0a0a0;
+        cursor: not-allowed;
+    }
+
+    .result-container {
+        margin-top: 16px;
+        display: none;
+    }
+
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+
+    .status-tag {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+
+    .status-tag.success { background: #d4edda; color: #155724; }
+    .status-tag.error { background: #f8d7da; color: #721c24; }
+
+    .clear-btn {
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .clear-btn:hover { text-decoration: underline; }
+
+    pre.result {
+        background: #272822;
+        color: #f8f8f2;
+        padding: 12px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        margin: 0;
+    }
+
+    .spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function clearResult(wrapperId) {
+        document.getElementById(wrapperId).style.display = 'none';
+    }
+
+    async function handleFormSubmit(formId, url, resultId, statusId, wrapperId) {
+        const form = document.getElementById(formId);
+        const submitBtn = document.getElementById(formId + '-btn');
+        const btnText = submitBtn.querySelector('.btn-text');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const wrapper = document.getElementById(wrapperId);
+            const resultDiv = document.getElementById(resultId);
+            const statusTag = document.getElementById(statusId);
+
+            submitBtn.disabled = true;
+            const originalText = btnText.innerText;
+            btnText.innerHTML = '<span class="spinner"></span> Processing...';
+            
+            wrapper.style.display = 'none';
+
+            const csrftoken = getCookie('csrftoken') || formData.get('csrfmiddlewaretoken');
+
+            try {
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrftoken || ''
+                    }
+                });
+
+                let data;
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    data = await response.json();
+                } else {
+                    data = { responseText: await response.text() };
+                }
+
+                wrapper.style.display = 'block';
+                
+                if (response.ok) {
+                    statusTag.className = 'status-tag success';
+                    statusTag.innerText = `HTTP ${response.status} OK`;
+                } else {
+                    statusTag.className = 'status-tag error';
+                    statusTag.innerText = `HTTP ${response.status} Error`;
+                }
+
+                resultDiv.innerText = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                wrapper.style.display = 'block';
+                statusTag.className = 'status-tag error';
+                statusTag.innerText = 'Network Error';
+                resultDiv.innerText = JSON.stringify({ error: error.message }, null, 2);
+            } finally {
+                submitBtn.disabled = false;
+                btnText.innerText = originalText;
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        handleFormSubmit('whatsappForm', '/api/v1/integrations/notify/whatsapp/', 'whatsappResult', 'whatsappStatus', 'whatsappResultWrapper');
+        handleFormSubmit('pushForm', '/api/v1/integrations/notify/push/', 'pushResult', 'pushStatus', 'pushResultWrapper');
+        handleFormSubmit('uploadForm', '/api/v1/integrations/upload/media/', 'uploadResult', 'uploadStatus', 'uploadResultWrapper');
+    });
+</script>
+{% endblock %}

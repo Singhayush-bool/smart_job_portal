@@ -1,0 +1,91 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Checkout - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+
+    <div class="card checkout-card">
+        <h2 class="checkout-title">🛍️ Order Summary</h2>
+
+        <!-- PLAN BREAKDOWN -->
+        <div class="summary-list">
+            <div class="summary-item">
+                <span>Plan Name</span>
+                <strong>{{ plan.name }}</strong>
+            </div>
+            <div class="summary-item">
+                <span>Original Price</span>
+                <span>₹{{ original_amount|default:plan.price }}</span>
+            </div>
+            
+            {% if discount_amount > 0 %}
+            <div class="summary-item discount-row">
+                <span>Discount Applied</span>
+                <span>- ₹{{ discount_amount }}</span>
+            </div>
+            {% endif %}
+
+            <div class="summary-item total-row">
+                <span>Total Payable</span>
+                <span class="total-price">₹{{ amount }}</span>
+            </div>
+        </div>
+
+        <!-- COUPON CODE FORM -->
+        <form method="POST" action="" class="coupon-form">
+            {% csrf_token %}
+            <label class="form-label">Have a Coupon Code?</label>
+            <div class="coupon-input-group">
+                <input type="text" name="coupon_code" placeholder="e.g. SAVE20" required class="form-input">
+                <button type="submit" class="btn-coupon">Apply</button>
+            </div>
+        </form>
+
+        <!-- RAZORPAY PAYMENT -->
+        <div class="payment-action">
+            <form action="{% url 'billing:payment_success' %}" method="POST">
+                <script
+                    src="https://checkout.razorpay.com/v1/checkout.js"
+                    data-key="{{ razorpay_key_id }}"
+                    data-amount="{{ amount|floatformat:2|add:'0' }}00"
+                    data-currency="INR"
+                    data-order_id="{{ order_id }}"
+                    data-buttontext="Pay ₹{{ amount }} Now"
+                    data-name="Smart Job Portal"
+                    data-description="{{ plan.name }} Subscription"
+                    data-prefill.name="{{ request.user.username }}"
+                    data-prefill.email="{{ request.user.email }}"
+                    data-theme.color="#0a66c2">
+                </script>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .checkout-container { max-width: 500px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .checkout-card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+
+    .checkout-title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 24px 0; color: #191919; }
+
+    .summary-list { border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .summary-item { display: flex; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid #f0f0f0; font-size: 14px; color: #444; }
+    .summary-item:last-child { border-bottom: none; }
+    
+    .discount-row { background: #f6fbf7; color: #137333; font-weight: 600; }
+    .total-row { background: #fafafa; font-size: 16px; font-weight: 700; color: #191919; }
+    .total-price { color: #0a66c2; font-size: 18px; }
+
+    .coupon-form { margin-bottom: 24px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .coupon-input-group { display: flex; gap: 8px; }
+    .form-input { flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+    .form-input:focus { border-color: #0a66c2; }
+    .btn-coupon { background: #f3f2ef; border: 1px solid #ccc; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    .payment-action { text-align: center; }
+    .payment-action input[type="submit"], .payment-action .razorpay-payment-button { width: 100% !important; background: #0a66c2 !important; color: white !important; border: none !important; padding: 12px 20px !important; border-radius: 20px !important; font-size: 15px !important; font-weight: 700 !important; cursor: pointer !important; }
+</style>
+{% endblock %}

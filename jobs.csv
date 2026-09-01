@@ -1,0 +1,3 @@
+title,company,description,category,industry,location,salary_min,salary_max,experience_min,experience_max,employment_type,work_mode,skills,expires_at
+"Python Developer","Google","Looking for an experienced Python developer with Django knowledge.","IT & Software","Technology","Bangalore, India",500000,1200000,2,5,"Full Time","Onsite","Python, Django, SQL","2026-12-31 23:59:59"
+"Frontend React Dev","Microsoft","Building scalable UI components using React and Tailwind.","IT & Software","Technology","Hyderabad, India",600000,1500000,1,3,"Full Time","Remote","React, JavaScript, CSS","2026-11-30 23:59:59"

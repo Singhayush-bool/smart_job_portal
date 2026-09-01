@@ -1,0 +1,66 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Saved Jobs - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="saved-jobs-container">
+
+    <div class="card page-header">
+        <div>
+            <h2>❤️ Saved Jobs</h2>
+            <p>Your bookmarked openings for quick application access.</p>
+        </div>
+        <a href="{% url 'accounts:job_list' %}" class="btn-secondary">Find More Jobs</a>
+    </div>
+
+    <div class="saved-jobs-list">
+        {% for saved in saved_jobs %}
+            <div class="card saved-card">
+                <div class="saved-header">
+                    <div>
+                        <h3 class="job-title">
+                            <a href="{% url 'accounts:job_detail' saved.job.id %}">{{ saved.job.title }}</a>
+                        </h3>
+                        <p class="company-name">🏢 {{ saved.job.company.name }}</p>
+                    </div>
+                    <a href="{% url 'accounts:unsave_job' saved.job.id %}" class="btn-remove">Remove 🗑️</a>
+                </div>
+
+                <div class="job-meta-pills">
+                    <span>📍 {{ saved.job.location }}</span>
+                    <span>💼 {{ saved.job.get_employment_type_display|default:saved.job.employment_type }}</span>
+                </div>
+
+                <div class="saved-footer">
+                    <a href="{% url 'accounts:job_detail' saved.job.id %}" class="btn-primary-sm">View & Apply ↗</a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card empty-state">
+                <div class="empty-icon">🤍</div>
+                <h3>No Saved Jobs</h3>
+                <p>You haven't bookmarked any jobs yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .saved-jobs-container { max-width: 850px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .page-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; }
+    .page-header p { margin: 0; color: #666; font-size: 14px; }
+    .saved-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .job-title { font-size: 18px; font-weight: 700; margin: 0 0 4px 0; }
+    .job-title a { color: #191919; text-decoration: none; }
+    .company-name { font-size: 14px; color: #0a66c2; font-weight: 600; margin: 0; }
+    .btn-remove { color: #d93025; font-size: 12px; font-weight: 600; text-decoration: none; }
+    .job-meta-pills { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #666; margin-bottom: 16px; }
+    .btn-primary-sm { background: #0a66c2; color: #fff; padding: 7px 16px; border-radius: 16px; text-decoration: none; font-size: 12px; font-weight: 600; }
+    .btn-secondary { border: 1px solid #e0e0e0; color: #666; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    .empty-state { text-align: center; padding: 40px 20px; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+{% endblock %}

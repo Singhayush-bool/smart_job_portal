@@ -1,0 +1,236 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Post a New Job - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="linkedin-job-container">
+    <div class="linkedin-card">
+        
+        <!-- Header -->
+        <div class="linkedin-header">
+            <div class="linkedin-icon">💼</div>
+            <div>
+                <h2>Post a New Job</h2>
+                <p>Create a listing to attract top professionals instantly.</p>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" novalidate class="linkedin-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="linkedin-alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="linkedin-field-group">
+                    <label for="{{ field.id_for_label }}" class="linkedin-label">
+                        {{ field.label }} {% if field.field.required %}<span class="req">*</span>{% endif %}
+                    </label>
+                    
+                    <div class="linkedin-input-wrap">
+                        {{ field }}
+                    </div>
+
+                    {% if field.help_text %}
+                        <div class="linkedin-help">{{ field.help_text }}</div>
+                    {% endif %}
+                    
+                    {% for error in field.errors %}
+                        <div class="linkedin-error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            <!-- Actions -->
+            <div class="linkedin-actions">
+                <button type="submit" class="linkedin-btn-primary">Post Job</button>
+                <a href="{% url 'accounts:employer_jobs' %}" class="linkedin-btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<!-- create_job.html ke script tag ko yeh rakh dein -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), textarea').forEach(el => {
+            el.classList.add('li-input');
+        });
+        
+        document.querySelectorAll('select').forEach(el => {
+            el.classList.add('li-select');
+        });
+    });
+</script>
+
+<style>
+    body {
+        background-color: #f3f2ef !important;
+    }
+    
+    .linkedin-job-container {
+        max-width: 800px;
+        margin: 36px auto;
+        padding: 0 16px;
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .linkedin-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        padding: 36px;
+    }
+
+    .linkedin-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .linkedin-icon {
+        background: #0a66c2;
+        color: white;
+        font-size: 24px;
+        padding: 14px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(10, 102, 194, 0.3);
+    }
+
+    .linkedin-header h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.9);
+        margin: 0 0 4px 0;
+    }
+
+    .linkedin-header p {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.6);
+        margin: 0;
+    }
+
+    .linkedin-field-group {
+        margin-bottom: 22px;
+    }
+
+    .linkedin-label {
+        box-sizing: border-box;
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 6px;
+    }
+
+    .req {
+        color: #d11124;
+    }
+
+    .li-input, .li-select {
+        width: 100%;
+        padding: 11px 14px;
+        font-size: 14px;
+        border: 1px solid #8c8c8c;
+        border-radius: 6px;
+        background-color: #fff;
+        color: rgba(0, 0, 0, 0.9);
+        transition: all 0.2s ease;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .li-input:focus, .li-select:focus {
+        border-color: #0a66c2;
+        box-shadow: inset 0 0 0 2px #0a66c2;
+    }
+
+    textarea.li-input {
+        min-height: 130px;
+        resize: vertical;
+    }
+
+    .linkedin-help {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+        margin-top: 4px;
+    }
+
+    .linkedin-error {
+        font-size: 12px;
+        color: #d11124;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    .linkedin-alert-danger {
+        background-color: #fce8e6;
+        color: c5221f;
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 20px;
+        border: 1px solid #f8d7da;
+    }
+
+    .linkedin-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .linkedin-btn-primary {
+        background-color: #0a66c2;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 24px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+    }
+
+    .linkedin-btn-primary:hover {
+        background-color: #004182;
+    }
+
+    .linkedin-btn-secondary {
+        background-color: transparent;
+        color: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.6);
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 24px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: background-color 0.2s, color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .linkedin-btn-secondary:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+        color: rgba(0, 0, 0, 0.9);
+    }
+</style>
+{% endblock %}

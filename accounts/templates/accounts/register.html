@@ -1,0 +1,47 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Register - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <h2>Create Account</h2>
+            <p>Join SmartJobs to find jobs and grow your network.</p>
+        </div>
+
+        <form method="POST" class="auth-form">
+            {% csrf_token %}
+
+            <div class="form-wrapper">
+                {{ form.as_p }}
+            </div>
+
+            <button type="submit" class="btn-auth-submit">Register</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Already have an account? <a href="{% url 'accounts:login' %}">Sign In</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container { max-width: 440px; margin: 40px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .auth-card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+
+    .auth-header { text-align: center; margin-bottom: 24px; }
+    .auth-header h2 { font-size: 22px; font-weight: 700; color: #191919; margin: 0 0 6px 0; }
+    .auth-header p { font-size: 13px; color: #666; margin: 0; }
+
+    .form-wrapper p { margin-bottom: 14px; }
+    .form-wrapper label { display: block; font-size: 13px; font-weight: 600; color: #191919; margin-bottom: 4px; }
+    .form-wrapper input, .form-wrapper select { width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; }
+    .form-wrapper input:focus { border-color: #0a66c2; }
+
+    .btn-auth-submit { width: 100%; background: #0a66c2; color: white; border: none; padding: 12px; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+    
+    .auth-footer { text-align: center; margin-top: 20px; font-size: 13px; color: #666; }
+    .auth-footer a { color: #0a66c2; font-weight: 600; text-decoration: none; }
+</style>
+{% endblock %}

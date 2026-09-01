@@ -1,0 +1,54 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Edit Post - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="edit-post-container">
+    <div class="card">
+        <h2>✏️ Edit Post</h2>
+        <form method="POST" enctype="multipart/form-data" class="edit-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="content">Post Content</label>
+                <textarea name="content" id="content" rows="4" required>{{ post.content }}</textarea>
+            </div>
+
+            {% if post.image %}
+                <div class="existing-image">
+                    <p>Current Image:</p>
+                    <img src="{{ post.image.url }}" alt="Post image" class="preview-img">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remove_image" value="true"> Remove existing image
+                    </label>
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="image">Change / Upload Image</label>
+                <input type="file" name="image" id="image" accept="image/*">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-save">Save Changes</button>
+                <a href="{% url 'accounts:dashboard' %}" class="btn-cancel">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .edit-post-container { max-width: 600px; margin: 30px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .card h2 { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #191919; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .form-group textarea, .form-group input[type="file"] { width: 100%; padding: 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+    .existing-image { margin-bottom: 16px; background: #f8f9fa; padding: 12px; border-radius: 8px; }
+    .preview-img { max-height: 180px; border-radius: 6px; display: block; margin: 8px 0; }
+    .checkbox-label { font-size: 12px; color: #e53e3e; cursor: pointer; }
+    .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-save { background: #0a66c2; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; }
+    .btn-cancel { background: #f3f2ef; color: #666; text-decoration: none; padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 13px; }
+</style>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Home - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="home-container">
+
+    <!-- LEFT SIDEBAR (Desktop par dikhegi, Mobile par hide ho jayegi) -->
+    <aside class="left-sidebar desktop-sidebar">
+        <div class="card welcome-banner-card">
+            <div class="banner-content">
+                <h1>Welcome back, {{ request.user.username }}! 👋</h1>
+                <p>Build your professional network and explore top career choices.</p>
+            </div>
+            <a href="{% url 'accounts:profile' %}" class="btn-primary">View Profile 👤</a>
+        </div>
+
+        <div class="card sidebar-menu-wrapper">
+            <nav class="sidebar-menu">
+                <a href="{% url 'accounts:profile' %}" class="quick-nav-item"><span class="nav-icon">👤</span> My Profile</a>
+                <a href="{% url 'accounts:people' %}" class="quick-nav-item"><span class="nav-icon">👥</span> People</a>
+                <a href="{% url 'accounts:job_list' %}" class="quick-nav-item"><span class="nav-icon">💼</span> Find Jobs</a>
+                <a href="{% url 'accounts:saved_posts_list' %}" class="quick-nav-item"><span class="nav-icon">📌</span> Saved Posts</a>
+                <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="quick-nav-item"><span class="nav-icon">🤖</span> AI Resume Scanner</a>
+                <a href="{% url 'notifications:notification_list' %}" class="quick-nav-item"><span class="nav-icon">🔔</span> Notifications</a>
+            </nav>
+        </div>
+    </aside>
+
+    <!-- RIGHT FEED / MAIN CONTENT -->
+    <main class="main-content-feed">
+        <div class="home-grid">
+            <section class="card suggestion-section">
+                <h2>👥 People You May Know</h2>
+                <p class="empty-text">No network suggestions available right now.</p>
+            </section>
+        </div>
+    </main>
+
+</div>
+
+<style>
+    .home-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 24px;
+        width: 100%;
+    }
+    .left-sidebar {
+        position: sticky;
+        top: 76px;
+    }
+    .card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .welcome-banner-card {
+        background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
+        color: white;
+    }
+    .sidebar-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .quick-nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #666;
+        padding: 8px 10px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .quick-nav-item:hover {
+        background: #f3f2ef;
+        color: #191919;
+    }
+    .btn-primary {
+        display: inline-block;
+        background: #ffffff;
+        color: #0a66c2;
+        padding: 6px 14px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: bold;
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    /* RESPONSIVE FIX: Mobile par left sidebar bilkul chup jayegi */
+    @media (max-width: 1150px) {
+        .home-container {
+            display: block !important;
+        }
+        .left-sidebar {
+            display: none !important;
+        }
+    }
+</style>
+{% endblock %}

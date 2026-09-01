@@ -1,0 +1,158 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Choose Subscription Plan - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="plans-container">
+
+    <div class="card page-header">
+        <h2>Choose Your Subscription Plan</h2>
+        <p>Unlock features, post jobs, and download resumes with our flexible tiers.</p>
+    </div>
+
+    <!-- CURRENT SUBSCRIPTION SUMMARY & USAGE -->
+    {% if current_subscription %}
+    <div class="card active-sub-card">
+        <div class="sub-head">
+            <h3>Active Plan: <span class="text-blue">{{ current_subscription.plan.name }}</span></h3>
+            <span class="badge-status">{{ current_subscription.status|upper }}</span>
+        </div>
+
+        <p class="expiry-text">📅 Expires on: <strong>{{ current_subscription.end_date|date:"d M, Y" }}</strong></p>
+
+        <div class="usage-grid">
+            <!-- JOB POST LIMIT -->
+            <div class="usage-item">
+                <div class="usage-label">
+                    <span>Jobs Posted</span>
+                    <span>
+                        {{ usage.jobs_posted }} / 
+                        {% if current_subscription.plan.job_post_limit > 0 %}{{ current_subscription.plan.job_post_limit }}{% else %}Unlimited{% endif %}
+                    </span>
+                </div>
+                {% if current_subscription.plan.job_post_limit > 0 %}
+                    <div class="progress-bg">
+                        <div class="progress-fill" style="width: {% widthratio usage.jobs_posted current_subscription.plan.job_post_limit 100 %}%;"></div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- RESUME DOWNLOAD LIMIT -->
+            <div class="usage-item">
+                <div class="usage-label">
+                    <span>Resumes Downloaded</span>
+                    <span>
+                        {{ usage.resumes_downloaded }} / 
+                        {% if current_subscription.plan.resume_download_limit > 0 %}{{ current_subscription.plan.resume_download_limit }}{% else %}Unlimited{% endif %}
+                    </span>
+                </div>
+                {% if current_subscription.plan.resume_download_limit > 0 %}
+                    <div class="progress-bg">
+                        <div class="progress-fill info" style="width: {% widthratio usage.resumes_downloaded current_subscription.plan.resume_download_limit 100 %}%;"></div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PLANS GRID (3 COLUMNS SIDE-BY-SIDE) -->
+    <div class="plans-grid">
+        {% for plan in plans %}
+            <div class="card plan-card {% if current_subscription and current_subscription.plan.id == plan.id %}active-plan-border{% endif %}">
+                <div class="plan-card-header">
+                    <h4>{{ plan.name }}</h4>
+                </div>
+                
+                <div class="plan-card-body">
+                    <div class="price-tag">
+                        <span class="currency">₹</span><span class="price">{{ plan.price }}</span><span class="period">/mo</span>
+                    </div>
+
+                    <ul class="features-list">
+                        <li>✔️ <strong>Jobs Post Limit:</strong> {% if plan.job_post_limit > 0 %}{{ plan.job_post_limit }}{% else %}Unlimited{% endif %}</li>
+                        <li>✔️ <strong>Resume Downloads:</strong> {% if plan.resume_download_limit > 0 %}{{ plan.resume_download_limit }}{% else %}Unlimited{% endif %}</li>
+                    </ul>
+
+                    <div class="card-action">
+                        {% if current_subscription and current_subscription.plan.id == plan.id %}
+                            <button class="btn-disabled" disabled>Current Active Plan</button>
+                        {% else %}
+                            <a href="{% url 'billing:create_checkout_session' plan.id %}" class="btn-upgrade">
+                                {% if plan.price == 0 %}Get Started Free{% else %}Upgrade Plan{% endif %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+    .plans-container { max-width: 1200px; margin: 30px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 0 20px; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+
+    .page-header { text-align: center; }
+    .page-header h2 { font-size: 24px; font-weight: 800; margin: 0 0 6px 0; color: #111827; }
+    .page-header p { font-size: 14px; color: #6b7280; margin: 0; }
+
+    .active-sub-card { border-left: 5px solid #0a66c2; }
+    .sub-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sub-head h3 { font-size: 18px; margin: 0; font-weight: 700; color: #111827; }
+    .text-blue { color: #0a66c2; }
+    .badge-status { background: #e6f4ea; color: #137333; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+    .expiry-text { font-size: 13px; color: #555; margin: 0 0 16px 0; }
+
+    .usage-grid { display: flex; flex-direction: column; gap: 14px; }
+    .usage-label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #374151; }
+    .progress-bg { background: #e0e0e0; height: 8px; border-radius: 10px; overflow: hidden; }
+    .progress-fill { background: #0a66c2; height: 100%; border-radius: 10px; }
+    .progress-fill.info { background: #0077b5; }
+
+    /* STRICT 3-COLUMN GRID LAYOUT */
+    .plans-grid { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 20px; 
+    }
+
+    @media (max-width: 900px) {
+        .plans-grid { 
+            grid-template-columns: repeat(1, 1fr); 
+        }
+    }
+    
+    .plan-card { 
+        display: flex; 
+        flex-direction: column; 
+        text-align: center; 
+        margin-bottom: 0; 
+        transition: transform 0.2s, box-shadow 0.2s; 
+    }
+    
+    .plan-card:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+    }
+    
+    .active-plan-border { border: 2px solid #137333; }
+
+    .plan-card-header h4 { font-size: 18px; font-weight: 700; margin: 0 0 16px 0; color: #191919; }
+    .price-tag { margin-bottom: 20px; }
+    .currency { font-size: 18px; font-weight: 600; vertical-align: top; color: #111827; }
+    .price { font-size: 32px; font-weight: 800; color: #111827; }
+    .period { font-size: 13px; color: #6b7280; }
+
+    .features-list { list-style: none; padding: 0; margin: 0 0 20px 0; text-align: left; font-size: 13px; line-height: 2; color: #4b5563; border-top: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; padding-top: 12px; padding-bottom: 12px; }
+
+    .plan-card-body { display: flex; flex-direction: column; flex: 1; }
+    .card-action { margin-top: auto; }
+    
+    .btn-upgrade { background: #0a66c2; color: white; display: block; width: 100%; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; box-sizing: border-box; transition: background 0.2s; }
+    .btn-upgrade:hover { background: #004182; }
+    
+    .btn-disabled { background: #f3f2ef; color: #888; border: 1px solid #ccc; width: 100%; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: not-allowed; }
+</style>
+{% endblock %}

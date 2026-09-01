@@ -1,0 +1,120 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Revenue Dashboard - SmartJobs Admin{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard-container">
+
+    <div class="card page-header">
+        <div>
+            <h2>📊 Platform Revenue & Subscription Dashboard</h2>
+            <p>Real-time financial performance and analytics breakdown.</p>
+        </div>
+    </div>
+
+    <!-- STATS METRICS GRID -->
+    <div class="metrics-grid">
+        <div class="card metric-card green">
+            <span class="metric-label">💰 Total Revenue</span>
+            <h3 class="metric-value">₹{{ total_revenue }}</h3>
+        </div>
+        <div class="card metric-card blue">
+            <span class="metric-label">📅 Monthly Revenue (MRR)</span>
+            <h3 class="metric-value">₹{{ mrr }}</h3>
+        </div>
+        <div class="card metric-card yellow">
+            <span class="metric-label">🏛️ GST Collected</span>
+            <h3 class="metric-value">₹{{ total_gst }}</h3>
+        </div>
+        <div class="card metric-card gray">
+            <span class="metric-label">👥 Active Subscriptions</span>
+            <h3 class="metric-value">
+                {{ active_subs }} 
+                {% if cancelled_subs %}
+                    <small class="cancelled-tag">({{ cancelled_subs }} cancelled)</small>
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+
+    <!-- RECENT TRANSACTIONS TABLE -->
+    <div class="card table-card">
+        <div class="table-header">
+            <h3>💳 Recent Successful Payments</h3>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Plan Purchased</th>
+                        <th>Amount</th>
+                        <th>Payment ID</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in recent_payments %}
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <strong>{{ payment.user.username }}</strong>
+                                <span class="user-email">{{ payment.user.email }}</span>
+                            </div>
+                        </td>
+                        <td><span class="plan-badge">{{ payment.plan.name }}</span></td>
+                        <td><strong class="amount-text">₹{{ payment.amount }}</strong></td>
+                        <td><code class="payment-id">{{ payment.razorpay_payment_id }}</code></td>
+                        <td>{{ payment.created_at|date:"d M Y, h:i A" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-cell">No successful payments recorded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .admin-dashboard-container { max-width: 1100px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 24px; }
+
+    .page-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; color: #191919; }
+    .page-header p { margin: 0; color: #666; font-size: 14px; }
+
+    /* METRICS GRID */
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .metric-card { margin-bottom: 0; border-left: 5px solid #0a66c2; }
+    .metric-card.green { border-left-color: #137333; background: #f6fbf7; }
+    .metric-card.blue { border-left-color: #0a66c2; background: #f4f8fa; }
+    .metric-card.yellow { border-left-color: #b06000; background: #fdfbf4; }
+    .metric-card.gray { border-left-color: #5f6368; background: #f8f9fa; }
+
+    .metric-label { font-size: 13px; font-weight: 600; color: #555; display: block; margin-bottom: 8px; }
+    .metric-value { font-size: 24px; font-weight: 800; color: #191919; margin: 0; display: flex; align-items: baseline; gap: 8px; }
+    .cancelled-tag { font-size: 13px; color: #d93025; font-weight: 600; }
+
+    /* TABLE STYLING */
+    .table-card { padding: 0; overflow: hidden; }
+    .table-header { padding: 20px 24px; border-bottom: 1px solid #e0e0e0; background: #fafafa; }
+    .table-header h3 { font-size: 16px; font-weight: 700; margin: 0; color: #191919; }
+
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    .custom-table th { background: #f4f6f8; padding: 12px 20px; font-weight: 700; color: #444; border-bottom: 1px solid #e0e0e0; font-size: 12px; text-transform: uppercase; }
+    .custom-table td { padding: 14px 20px; border-bottom: 1px solid #f0f0f0; color: #333; vertical-align: middle; }
+    .custom-table tr:last-child td { border-bottom: none; }
+
+    .user-cell { display: flex; flex-direction: column; }
+    .user-email { font-size: 12px; color: #666; }
+    .plan-badge { background: #e8f0fe; color: #0a66c2; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .amount-text { color: #137333; font-weight: 700; }
+    .payment-id { font-family: monospace; background: #f3f2ef; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+    .empty-cell { text-align: center; padding: 30px !important; color: #888; font-style: italic; }
+</style>
+{% endblock %}

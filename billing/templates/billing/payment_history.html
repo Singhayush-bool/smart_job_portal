@@ -1,0 +1,81 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Payment History - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="history-container">
+
+    <div class="card page-header">
+        <h2>📜 Payment History & GST Invoices</h2>
+        <p>View your previous transactions and download invoices.</p>
+    </div>
+
+    <!-- TRANSACTIONS TABLE -->
+    <div class="card table-card">
+        <div class="table-responsive">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Invoice</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr>
+                        <td><code class="order-id">{{ txn.order_id|truncatechars:12 }}</code></td>
+                        <td><strong>{{ txn.plan.name }}</strong></td>
+                        <td><strong class="amount">₹{{ txn.total_amount }}</strong></td>
+                        <td>
+                            <span class="status-pill status-{{ txn.status }}">
+                                {{ txn.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ txn.created_at|date:"d M Y, h:i A" }}</td>
+                        <td>
+                            {% if txn.invoice %}
+                                <a href="{% url 'view_invoice' txn.invoice.id %}" class="btn-link">View Invoice 📄</a>
+                            {% else %}-{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-cell">No payment history found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .history-container { max-width: 950px; margin: 28px auto; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background: #ffffff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+
+    .page-header h2 { font-size: 22px; font-weight: 700; margin: 0 0 4px 0; }
+    .page-header p { margin: 0; color: #666; font-size: 14px; }
+
+    .table-card { padding: 0; overflow: hidden; }
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .custom-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+    .custom-table th { background: #f4f6f8; padding: 12px 18px; font-weight: 700; color: #444; border-bottom: 1px solid #e0e0e0; font-size: 12px; text-transform: uppercase; }
+    .custom-table td { padding: 14px 18px; border-bottom: 1px solid #f0f0f0; color: #333; vertical-align: middle; }
+
+    .order-id { font-family: monospace; background: #f3f2ef; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    .amount { color: #191919; }
+
+    .status-pill { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .status-success { background: #e6f4ea; color: #137333; }
+    .status-pending { background: #fef7e0; color: #b06000; }
+    .status-failed { background: #fce8e6; color: #c5221f; }
+
+    .btn-link { color: #0a66c2; font-weight: 600; text-decoration: none; font-size: 13px; }
+    .empty-cell { text-align: center; padding: 30px !important; color: #888; font-style: italic; }
+</style>
+{% endblock %}

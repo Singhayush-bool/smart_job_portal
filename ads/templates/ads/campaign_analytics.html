@@ -1,0 +1,300 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Ad Campaign Analytics - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    
+    <!-- HEADER -->
+    <div class="analytics-header">
+        <div>
+            <h1>📈 Ad Campaign Analytics</h1>
+            <p>Track real-time performance, impressions, clicks, and expenditures for your advertisements.</p>
+        </div>
+        <a href="{% url 'accounts:dashboard' %}" class="btn-back">← Back to Dashboard</a>
+    </div>
+
+    <!-- OVERVIEW STATS CARDS -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-icon">🎯</span>
+            <div class="stat-info">
+                <h3>Total Impressions</h3>
+                <p class="stat-value">{{ total_impressions|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">🖱️</span>
+            <div class="stat-info">
+                <h3>Total Clicks</h3>
+                <p class="stat-value">{{ total_clicks|default:0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">📊</span>
+            <div class="stat-info">
+                <h3>Avg. Click Rate (CTR)</h3>
+                <p class="stat-value">{{ overall_ctr|default:"0.00" }}%</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <span class="stat-icon">💰</span>
+            <div class="stat-info">
+                <h3>Total Budget Spent</h3>
+                <p class="stat-value">₹{{ total_spent|default:"0.00" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CAMPAIGNS TABLE -->
+    <div class="card table-card">
+        <h2>Your Active Campaigns</h2>
+        {% if campaigns %}
+            <div class="table-responsive">
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Campaign Title</th>
+                            <th>Status</th>
+                            <th>Budget</th>
+                            <th>Spent</th>
+                            <th>Duration</th>
+                            <th>Ads Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for campaign in campaigns %}
+                        <tr>
+                            <td><strong>{{ campaign.title }}</strong></td>
+                            <td>
+                                <span class="badge status-{{ campaign.status|lower }}">
+                                    {{ campaign.get_status_display|default:campaign.status }}
+                                </span>
+                            </td>
+                            <td>₹{{ campaign.budget }}</td>
+                            <td>₹{{ campaign.spent }}</td>
+                            <td><small>{{ campaign.start_date|date:"d M Y" }} - {{ campaign.end_date|date:"d M Y" }}</small></td>
+                            <td>{{ campaign.ads.count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No active campaigns found. Create your first campaign from the Admin Panel to see analytics here!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- INDIVIDUAL ADS TABLE -->
+    <div class="card table-card">
+        <h2>Individual Ad Performance</h2>
+        {% if ads %}
+            <div class="table-responsive">
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Ad Title</th>
+                            <th>Placement Type</th>
+                            <th>Impressions</th>
+                            <th>Clicks</th>
+                            <th>CTR (%)</th>
+                            <th>CPC Rate</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ad in ads %}
+                        <tr>
+                            <td><strong>{{ ad.title }}</strong></td>
+                            <td><span class="placement-tag">{{ ad.get_ad_type_display|default:ad.ad_type }}</span></td>
+                            <td>{{ ad.impressions }}</td>
+                            <td>{{ ad.clicks }}</td>
+                            <td><strong>{{ ad.ctr }}%</strong></td>
+                            <td>₹{{ ad.cpc }}</td>
+                            <td>
+                                {% if ad.is_active %}
+                                    <span class="badge status-active">Active</span>
+                                {% else %}
+                                    <span class="badge status-inactive">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No individual ad statistics available yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<style>
+    .analytics-container {
+        max-width: 1128px;
+        margin: 24px auto;
+        padding: 0 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .analytics-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .analytics-header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #191919;
+        margin: 0 0 4px;
+    }
+
+    .analytics-header p {
+        color: #666;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .btn-back {
+        background: #ffffff;
+        border: 1px solid #0a66c2;
+        color: #0a66c2;
+        padding: 8px 16px;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(10, 102, 194, 0.08);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .stat-icon {
+        font-size: 32px;
+        background: #f3f2ef;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .stat-info h3 {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+        margin: 0 0 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0a66c2;
+        margin: 0;
+    }
+
+    .card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .table-card h2 {
+        font-size: 18px;
+        font-weight: 600;
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: #191919;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 14px;
+    }
+
+    .analytics-table th {
+        background: #f8f9fa;
+        color: #666;
+        font-weight: 600;
+        padding: 12px;
+        border-bottom: 2px solid #e0e0e0;
+    }
+
+    .analytics-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e0e0e0;
+        color: #333;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-active {
+        background: #e6f4ea;
+        color: #137333;
+    }
+
+    .status-inactive, .status-paused, .status-draft {
+        background: #fce8e6;
+        color: #c5221f;
+    }
+
+    .placement-tag {
+        background: #e8f0fe;
+        color: #1a73e8;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: #666;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}

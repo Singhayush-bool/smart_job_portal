@@ -1,0 +1,385 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartJobs{% endblock %}</title>
+
+    <!-- Tailwind CSS Generated File -->
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    
+    <!-- PLAY CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f3f6f8; color: #222; }
+
+        /* SPLASH SCREEN */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #ffffff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .splash-logo-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: logoBeat 1.2s infinite ease-in-out;
+        }
+
+        @keyframes logoBeat {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.08); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* NAVBAR */
+        .navbar { 
+            height: 56px; 
+            background: white; 
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 16px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+        }
+        
+        .nav-container {
+            max-width: 1350px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .search-form { 
+            display: flex; 
+            align-items: center; 
+            background: #eef3f8; 
+            border-radius: 4px; 
+            border: 1px solid transparent; 
+            overflow: hidden; 
+            transition: all 0.2s;
+        }
+        .search-form:focus-within {
+            border-color: #000;
+            background: #fff;
+            box-shadow: 0 0 0 1px #000;
+        }
+        .search-select { 
+            background: transparent; 
+            border: none; 
+            padding: 6px 8px; 
+            font-size: 11.5px; 
+            color: #666; 
+            outline: none; 
+            border-right: 1px solid #d0d7de; 
+            cursor: pointer; 
+        }
+        .search-box { 
+            width: 180px; 
+            padding: 6px 8px; 
+            border: none; 
+            background: transparent; 
+            outline: none; 
+            font-size: 12px; 
+        }
+        .search-btn { 
+            background: transparent; 
+            border: none; 
+            color: #666; 
+            padding: 6px 8px; 
+            cursor: pointer; 
+            font-size: 12px; 
+        }
+        .search-btn:hover { color: #0a66c2; }
+
+        .nav-links { 
+            display: flex; 
+            align-items: center; 
+            height: 100%;
+            gap: 2px;
+        }
+        
+        .nav-links a { 
+            text-decoration: none; 
+            color: #666; 
+            font-size: 11px; 
+            font-weight: 400; 
+            padding: 0 4px; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 55px;
+            position: relative;
+            transition: color 0.2s;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .nav-links a span.nav-icon {
+            font-size: 15px;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .nav-links a:hover, .nav-links a.active { 
+            color: #191919; 
+        }
+        
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #191919;
+        }
+
+        .nav-links a.upgrade-link { color: #915907; }
+        .nav-links a.ai-link { color: #6b21a8; }
+        .nav-links a.admin-link { color: #d93025; }
+        
+        .logout-link { 
+            color: #d93025 !important; 
+            border-left: 1px solid #e0e0e0; 
+            margin-left: 2px; 
+            padding-left: 6px !important; 
+            min-width: 52px !important; 
+            white-space: nowrap;
+        }
+
+        .main-container { 
+            width: 90%; 
+            max-width: 1200px; 
+            margin: 25px auto; 
+            min-height: calc(100vh - 150px);
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+        }
+
+        .footer { text-align: center; padding: 25px; margin-top: 40px; color: #666; font-size: 14px; }
+        .mobile-menu { display: none; font-size: 22px; cursor: pointer; }
+
+        /* RESPONSIVE OPTIMIZATION FOR MOBILE & TABLETS */
+        @media (max-width: 1150px) {
+            .search-form { display: none; }
+            .mobile-menu { display: block; }
+            .nav-links { 
+                display: none; 
+                position: absolute; 
+                top: 56px; 
+                left: 0; 
+                width: 100%; 
+                background: white; 
+                flex-direction: column; 
+                align-items: stretch; 
+                border-bottom: 1px solid #ddd; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+                z-index: 1001; 
+            }
+            .nav-links.show { display: flex !important; }
+            .nav-links a { 
+                height: 45px; 
+                flex-direction: row; 
+                justify-content: flex-start; 
+                gap: 12px; 
+                padding: 0 20px; 
+                min-width: 100%; 
+                text-align: left; 
+            }
+            .nav-links a span.nav-icon { margin-bottom: 0; font-size: 16px; }
+            .logout-link { border-left: none; margin-left: 0; padding-left: 20px !important; min-width: 100% !important; }
+            
+            .main-container { 
+                flex-direction: column !important; 
+                width: 95% !important; 
+                margin: 15px auto !important;
+                gap: 16px !important;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-logo-wrapper">
+            <svg width="64" height="64" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="36" height="36" rx="8" fill="#0A66C2"/>
+                <path d="M11 15C11 13.8954 11.8954 13 13 13H23C24.1046 13 25 13.8954 25 15V23C25 24.1046 24.1046 25 23 25H13C11.8954 25 11 24.1046 11 23V15Z" fill="white"/>
+                <path d="M15 13V11C15 9.89543 15.8954 9 17 9H19C20.1046 9 21 9.89543 21 11V13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <path d="M16 19L18 21L21 17" stroke="#0A66C2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span style="font-size: 26px; font-weight: 800; color: #0A66C2; letter-spacing: -0.5px; margin-top: 10px;">
+                Smart<span style="color: #057642;">Jobs</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="{% url 'accounts:dashboard' %}" onclick="triggerLogoSplash(event)" style="text-decoration: none; display: flex; align-items: center;">
+                    <svg width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 6px;">
+                        <rect width="36" height="36" rx="8" fill="#0A66C2"/>
+                        <path d="M11 15C11 13.8954 11.8954 13 13 13H23C24.1046 13 25 13.8954 25 15V23C25 24.1046 24.1046 25 23 25H13C11.8954 25 11 24.1046 11 23V15Z" fill="white"/>
+                        <path d="M15 13V11C15 9.89543 15.8954 9 17 9H19C20.1046 9 21 9.89543 21 11V13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M16 19L18 21L21 17" stroke="#0A66C2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span style="font-size: 22px; font-weight: 800; color: #0A66C2; letter-spacing: -0.5px;">
+                        Smart<span style="color: #057642;">Jobs</span>
+                    </span>
+                </a>
+
+                {% if request.user.is_authenticated %}
+                    <form action="{% url 'accounts:global_search' %}" method="GET" class="search-form">
+                        <select name="type" class="search-select">
+                            <option value="job" {% if request.GET.type == 'job' %}selected{% endif %}>Jobs</option>
+                            <option value="people" {% if request.GET.type == 'people' %}selected{% endif %}>People</option>
+                        </select>
+                        <input type="text" name="q" class="search-box" placeholder="Search..." value="{{ request.GET.q|default:'' }}">
+                        <button type="submit" class="search-btn">🔍</button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <div class="mobile-menu" onclick="toggleMenu()">☰</div>
+
+            <div class="nav-links" id="navLinks">
+                {% if request.user.is_authenticated %}
+
+                    <!-- ADMIN LINKS -->
+                    {% if request.user.is_superuser or request.user.is_staff or request.user.role|upper == 'ADMIN' or request.user.user_type|upper == 'ADMIN' or request.user.profile.role|upper == 'ADMIN' %}
+                        <a href="{% url 'accounts:admin_dashboard' %}" class="admin-link"><span class="nav-icon">⚡</span>Admin Hub</a>
+                        <a href="{% url 'analytics:super_admin_dashboard' %}" class="admin-link"><span class="nav-icon">🛠️</span>Analytics</a>
+                        <a href="{% url 'billing:admin_revenue_dashboard' %}" class="upgrade-link"><span class="nav-icon">📊</span>Revenue</a>
+                        <a href="{% url 'billing:admin_manage_subscriptions' %}" class="admin-link"><span class="nav-icon">💳</span>Plans</a>
+                        <a href="{% url 'integrations:test_panel' %}"><span class="nav-icon">🧪</span>Test</a>
+                        <a href="/admin/" target="_blank"><span class="nav-icon">⚙️</span>Django</a>
+
+                    <!-- EMPLOYER LINKS -->
+                    {% elif request.user.role|upper == 'EMPLOYER' or request.user.user_type|upper == 'EMPLOYER' or request.user.profile.role|upper == 'EMPLOYER' %}
+                        <a href="{% url 'accounts:dashboard' %}"><span class="nav-icon">🏠</span>Home</a>
+                        <a href="{% url 'accounts:job_list' %}"><span class="nav-icon">💼</span>Posted Jobs</a>
+                        <a href="{% url 'accounts:people' %}"><span class="nav-icon">👥</span>Candidates</a>
+                        <a href="{% url 'analytics:employer_analytics' %}"><span class="nav-icon">📈</span>Analytics</a>
+                        <a href="{% url 'billing:subscription_plans' %}" class="upgrade-link"><span class="nav-icon">⭐</span>Plans</a>
+                        <a href="{% url 'billing:my_subscription' %}"><span class="nav-icon">💳</span>My Plan</a>
+                        
+                        <a href="{% url 'notifications:notification_list' %}" style="position: relative;">
+                            <span class="nav-icon">🔔</span>Alerts
+                            {% if unread_notifications_count > 0 %}
+                                <span style="position: absolute; top: 8px; right: 12px; width: 7px; height: 7px; background-color: #dc3545; border-radius: 50%;"></span>
+                            {% endif %}
+                        </a>
+
+                    <!-- JOBSEEKER LINKS -->
+                    {% else %}
+                        <a href="{% url 'accounts:dashboard' %}"><span class="nav-icon">🏠</span>Home</a>
+                        <a href="{% url 'accounts:job_list' %}"><span class="nav-icon">💼</span>Find Jobs</a>
+                        <a href="{% url 'accounts:people' %}"><span class="nav-icon">👥</span>People</a>
+                        <a href="{% url 'ai_jobseeker:analyze_resume' %}" class="ai-link"><span class="nav-icon">🤖</span>AI Resume</a>
+                        <a href="{% url 'analytics:job_seeker_analytics' %}"><span class="nav-icon">📊</span>Analytics</a>
+                        <a href="{% url 'billing:subscription_plans' %}" class="upgrade-link"><span class="nav-icon">⭐</span>Plans</a>
+                        <a href="{% url 'billing:my_subscription' %}"><span class="nav-icon">💳</span>My Plan</a>
+                        
+                        <a href="{% url 'notifications:notification_list' %}" style="position: relative;">
+                            <span class="nav-icon">🔔</span>Alerts
+                            {% if unread_notifications_count > 0 %}
+                                <span style="position: absolute; top: 8px; right: 12px; width: 7px; height: 7px; background-color: #dc3545; border-radius: 50%;"></span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+
+                    <a href="{% url 'accounts:saved_posts_list' %}"><span class="nav-icon">📌</span>Saved</a>
+                    <a href="{% url 'accounts:profile' %}"><span class="nav-icon">👤</span>Profile</a>
+                    <a href="{% url 'accounts:logout' %}" class="logout-link"><span class="nav-icon">🚪</span>Logout</a>
+
+                {% else %}
+                    <a href="{% url 'accounts:login' %}"><span class="nav-icon">🔑</span>Login</a>
+                    <a href="{% url 'accounts:register' %}"><span class="nav-icon">📝</span>Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>© 2026 SmartJobs — Professional Career Network</p>
+    </footer>
+
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById("navLinks");
+            nav.classList.toggle("show");
+        }
+
+        window.addEventListener("DOMContentLoaded", function() {
+            const splash = document.getElementById("splash-screen");
+            const hasVisited = sessionStorage.getItem("smartjobs_visited");
+
+            if (!hasVisited) {
+                splash.style.display = "flex";
+                setTimeout(function() {
+                    splash.classList.add("fade-out");
+                    sessionStorage.setItem("smartjobs_visited", "true");
+                }, 800);
+            } else {
+                splash.style.display = "none";
+            }
+        });
+
+        function triggerLogoSplash(event) {
+            event.preventDefault();
+            const splash = document.getElementById("splash-screen");
+            splash.style.display = "flex";
+            splash.classList.remove("fade-out");
+
+            setTimeout(function() {
+                window.location.href = "{% url 'accounts:dashboard' %}";
+            }, 600);
+        }
+    </script>
+
+</body>
+</html>

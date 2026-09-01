@@ -1,0 +1,79 @@
+{% extends "accounts/base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    <h2>🕵️ AI Candidate Screening & Fraud Risk Analysis</h2>
+    <hr>
+    <div class="row">
+        <div class="col-md-6">
+            <form id="screenForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Job Requirements:</label>
+                    <textarea name="job_requirements" class="form-control" rows="5" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Candidate Resume Text:</label>
+                    <textarea name="candidate_resume" class="form-control" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-dark w-100" id="btnScreen">Screen Candidate</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div id="screenResultsCard" class="card d-none">
+                <div class="card-body">
+                    <h4>Screening Results</h4>
+                    <div class="d-flex justify-content-around my-3">
+                        <div class="text-center">
+                            <h5>Match Score</h5>
+                            <span id="matchScore" class="badge bg-success fs-3">0%</span>
+                        </div>
+                        <div class="text-center">
+                            <h5>Fraud Risk</h5>
+                            <span id="fraudRisk" class="badge bg-secondary fs-3">LOW</span>
+                        </div>
+                    </div>
+                    <h5>📌 Candidate Strengths:</h5>
+                    <ul id="strengthsList" class="text-success"></ul>
+                    
+                    <h5>⚠️ Red Flags / Risk Areas:</h5>
+                    <ul id="redFlagsList" class="text-danger"></ul>
+
+                    <h5>📝 Summary:</h5>
+                    <p id="summaryText" class="text-muted"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('screenForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnScreen');
+    btn.disabled = true;
+    btn.innerText = 'Analyzing Candidate...';
+
+    const formData = new FormData(this);
+    const response = await fetch("{% url 'ai_employer:screen_candidate' %}", {
+        method: 'POST',
+        body: formData
+    });
+    const data = await response.json();
+
+    document.getElementById('matchScore').innerText = data.match_score + '%';
+    
+    const riskBadge = document.getElementById('fraudRisk');
+    riskBadge.innerText = data.fraud_risk_level;
+    riskBadge.className = 'badge fs-3 ' + (data.fraud_risk_level === 'HIGH' ? 'bg-danger' : data.fraud_risk_level === 'MEDIUM' ? 'bg-warning' : 'bg-success');
+
+    document.getElementById('strengthsList').innerHTML = (data.strengths || []).map(s => `<li>${s}</li>`).join('');
+    document.getElementById('redFlagsList').innerHTML = (data.red_flags || ['None detected']).map(r => `<li>${r}</li>`).join('');
+    document.getElementById('summaryText').innerText = data.summary;
+
+    document.getElementById('screenResultsCard').classList.remove('d-none');
+    btn.disabled = false;
+    btn.innerText = 'Screen Candidate';
+});
+</script>
+{% endblock %}

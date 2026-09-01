@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment History & Invoices</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px;">
+
+    <h2>📜 Payment History & GST Invoices</h2>
+    <hr>
+
+    <h3>Past Payments</h3>
+    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; margin-bottom: 30px;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>Order ID</th>
+                <th>Plan</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for payment in payments %}
+            <tr>
+                <td>{{ payment.razorpay_order_id }}</td>
+                <td>{{ payment.plan.name }}</td>
+                <td>₹{{ payment.amount }}</td>
+                <td>
+                    {% if payment.status == 'success' %}
+                        <span style="color: green; font-weight: bold;">SUCCESS</span>
+                    {% elif payment.status == 'pending' %}
+                        <span style="color: orange; font-weight: bold;">PENDING</span>
+                    {% else %}
+                        <span style="color: red; font-weight: bold;">FAILED</span>
+                    {% endif %}
+                </td>
+                <td>{{ payment.created_at|date:"d M Y, h:i A" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Koi payment record nahi mila.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3> Tax & GST Invoices</h3>
+    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left;">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>Invoice ID</th>
+                <th>Base Amount</th>
+                <th>GST (18%)</th>
+                <th>Total Paid</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td>INV-{{ invoice.id }}</td>
+                <td>₹{{ invoice.base_amount }}</td>
+                <td>₹{{ invoice.gst_amount }}</td>
+                <td><strong>₹{{ invoice.total_amount }}</strong></td>
+                <td>
+                    <a href="{% url 'billing:invoice_detail' invoice.id %}" target="_blank">
+                        📄 View / Print Invoice
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">Koi invoice generate nahi hua hai.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>

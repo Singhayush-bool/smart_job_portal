@@ -1,0 +1,48 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Frequently Asked Questions - SmartJobs{% endblock %}
+
+{% block extra_head %}
+<!-- FAQ Schema for Search Engine Snippets -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for faq in faqs %}
+    {
+      "@type": "Question",
+      "name": "{{ faq.question|escapejs }}",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "{{ faq.answer|striptags|escapejs }}"
+      }
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="cms-container">
+    <h2>❓ Frequently Asked Questions</h2>
+    <div class="faq-accordion">
+        {% for faq in faqs %}
+            <details class="faq-item">
+                <summary class="faq-question"><strong>{{ faq.question }}</strong></summary>
+                <div class="faq-answer">{{ faq.answer|linebreaks }}</div>
+            </details>
+        {% empty %}
+            <p>No FAQs available right now.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .cms-container { max-width: 800px; margin: 30px auto; background: #fff; padding: 24px; border-radius: 10px; border: 1px solid #e0e0e0; }
+    .faq-item { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .faq-question { font-size: 16px; cursor: pointer; color: #0a66c2; padding: 8px 0; }
+    .faq-answer { margin-top: 8px; color: #444; font-size: 14px; line-height: 1.5; }
+</style>
+{% endblock %}

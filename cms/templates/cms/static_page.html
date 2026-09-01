@@ -1,0 +1,18 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}{{ page.meta_title|default:page.title }}{% endblock %}
+
+{% block content %}
+<div class="cms-container">
+    <h1>{{ page.title }}</h1>
+    <hr>
+    <div class="page-content">
+        {{ page.content|linebreaks }}
+    </div>
+</div>
+
+<style>
+    .cms-container { max-width: 800px; margin: 30px auto; background: #fff; padding: 30px; border-radius: 10px; border: 1px solid #e0e0e0; }
+    .page-content { line-height: 1.6; color: #333; }
+</style>
+{% endblock %}

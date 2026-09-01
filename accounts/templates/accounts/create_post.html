@@ -1,0 +1,113 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Create Post - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="form-page-container">
+    <div class="card form-card">
+        
+        <div class="form-header">
+            <h2>✏️ Create a Post</h2>
+            <p>Share professional insights, updates, or articles with your network.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="styled-form">
+            {% csrf_token %}
+            
+            <div class="form-body">
+                {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="field-error">⚠️ {{ field.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">📢 Publish Post</button>
+                <a href="{% url 'accounts:feed' %}" class="btn-secondary">← Back to Feed</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<style>
+    .form-page-container {
+        max-width: 580px;
+        margin: 36px auto;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 32px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .form-header {
+        padding-bottom: 16px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .form-header h2 { font-size: 22px; font-weight: 700; color: #191919; margin: 0 0 6px 0; }
+    .form-header p { color: #666; font-size: 14px; margin: 0; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label { display: block; font-size: 14px; font-weight: 600; color: #191919; margin-bottom: 6px; }
+
+    .styled-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        min-height: 120px;
+        font-family: inherit;
+    }
+
+    .styled-form textarea:focus {
+        border-color: #0a66c2;
+        box-shadow: 0 0 0 3px rgba(10, 102, 194, 0.15);
+    }
+
+    .field-error { color: #d93025; font-size: 12px; margin-top: 4px; }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        padding-top: 16px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .btn-primary {
+        background: #0a66c2;
+        color: #ffffff;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 20px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: #666;
+        border: 1px solid #e0e0e0;
+        padding: 9px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
