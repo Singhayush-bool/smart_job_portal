@@ -6,13 +6,14 @@ from . import views
 app_name = "accounts"
 
 urlpatterns = [
-    # Auth & Email Verification
+    # Auth & Email OTP Verification
     path("", views.dashboard, name="dashboard"),
     path("register/", views.register, name="register"),
     path("login/", views.user_login, name="login"),
     path("logout/", views.user_logout, name="logout"),
-    path("verify/<str:uid>/<str:token>/", views.verify_email, name="verify_email"),
-    # Password Reset (🟢 Fixed with custom email template)
+    path(
+        "verify-otp/", views.verify_otp, name="verify_otp"
+    ),  # <--- Naya OTP verification route
     # Password Reset
     path(
         "password-reset/",
@@ -34,7 +35,7 @@ urlpatterns = [
         "password-reset-confirm/<str:uidb64>/<str:token>/",
         auth_views.PasswordResetConfirmView.as_view(
             template_name="accounts/password_reset_confirm.html",
-            success_url="/accounts/password-reset-complete/",  # <--- Yahan add kiya gaya hai
+            success_url="/accounts/password-reset-complete/",
         ),
         name="password_reset_confirm",
     ),

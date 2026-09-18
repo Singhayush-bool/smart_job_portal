@@ -1,0 +1,22 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Verify OTP - SmartJobs{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 50px auto; padding: 24px;">
+    <h2>Email Verification</h2>
+    <p style="color: #666; font-size: 13px; margin-bottom: 20px;">
+        We have sent a 6-digit OTP to your registered email address (<strong>{{ email }}</strong>). Please enter it below.
+    </p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <div style="margin-bottom: 16px;">
+            <label for="otp" style="display: block; font-weight: 600; margin-bottom: 6px;">Enter 6-Digit OTP</label>
+            <input type="text" name="otp" id="otp" maxlength="6" required placeholder="123456" 
+                   style="width: 100%; padding: 10px; font-size: 18px; letter-spacing: 4px; text-align: center; border: 1px solid #ccc; border-radius: 6px; outline: none;">
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%; padding: 10px; font-size: 15px;">Verify OTP</button>
+    </form>
+</div>
+{% endblock %}

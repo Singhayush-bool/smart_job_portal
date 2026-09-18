@@ -4,11 +4,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
+import random
+from django.utils import timezone
 from django.core.mail import send_mail
 
 from .decorators import role_required
@@ -120,7 +119,7 @@ def dashboard(request):
 
 
 # =========================================================
-# REGISTER & EMAIL VERIFICATION
+# REGISTER & EMAIL OTP VERIFICATION
 # =========================================================
 
 
@@ -130,21 +129,18 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.is_verified = False
+
+            # 6-digit random OTP generate karein
+            otp = str(random.randint(100000, 999999))
+            user.email_otp = otp
+            user.otp_created_at = timezone.now()
             user.save()
 
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = default_token_generator.make_token(user)
-
-            verification_link = (
-                f"{request.scheme}://{request.get_host()}/verify/{uid}/{token}/"
-            )
-
-            subject = "Activate your SmartJobs Account"
+            subject = "Your SmartJobs Account Verification OTP"
             message = (
                 f"Hi {user.username},\n\n"
-                "Thank you for registering with SmartJobs. Please click the link below to verify your email and activate your account:\n\n"
-                f"{verification_link}\n\n"
-                "If you did not request this, please ignore this email."
+                f"Thank you for registering with SmartJobs. Your 6-digit email verification OTP is: {otp}\n\n"
+                "This OTP is valid for account activation. If you did not request this, please ignore this email."
             )
 
             try:
@@ -155,17 +151,18 @@ def register(request):
                     [user.email],
                     fail_silently=False,
                 )
+                request.session["verify_user_id"] = user.pk
                 messages.success(
                     request,
-                    "Registration successful! A verification link has been sent to your email address.",
+                    "Registration successful! Please enter the 6-digit OTP sent to your email.",
                 )
+                return redirect("accounts:verify_otp")
             except Exception as e:
                 messages.warning(
                     request,
                     "Registration successful, but failed to send verification email.",
                 )
-
-            return redirect("accounts:login")
+                return redirect("accounts:login")
     else:
         form = RegisterForm()
 
@@ -176,22 +173,33 @@ def register(request):
     )
 
 
-def verify_email(request, uid, token):
-    try:
-        uid = urlsafe_base64_decode(uid).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        messages.error(request, "Invalid verification link.")
-        return redirect("accounts:login")
+def verify_otp(request):
+    user_id = request.session.get("verify_user_id")
+    if not user_id:
+        messages.error(
+            request, "Session expired or invalid access. Please register again."
+        )
+        return redirect("accounts:register")
 
-    if default_token_generator.check_token(user, token):
-        user.is_verified = True
-        user.save()
-        messages.success(request, "Email verified successfully! You can now login.")
-        return redirect("accounts:login")
+    user = get_object_or_404(User, pk=user_id)
 
-    messages.error(request, "Verification link is invalid or expired.")
-    return redirect("accounts:login")
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp", "").strip()
+
+        if user.email_otp and user.email_otp == entered_otp:
+            user.is_verified = True
+            user.email_otp = None
+            user.otp_created_at = None
+            user.save()
+
+            del request.session["verify_user_id"]
+
+            messages.success(request, "Email verified successfully! You can now login.")
+            return redirect("accounts:login")
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    return render(request, "accounts/verify_otp.html", {"email": user.email})
 
 
 # =========================================================
@@ -782,34 +790,17 @@ def job_detail(request, job_id):
     )
 
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Post, SavedPost
-
-
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from .models import Post, SavedPost
-
-
-from django.shortcuts import get_object_or_404, redirect
-from .models import Post, SavedPost
-
-
 def toggle_save_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
 
-    # Check karo ki kya user ne pehle hi save kiya hai?
     saved_post = SavedPost.objects.filter(user=request.user, post=post)
 
     if saved_post.exists():
-        # Agar pehle se save hai, toh delete kar do (Unsave)
         saved_post.delete()
     else:
-        # Agar save nahi hai, toh save kar lo
         SavedPost.objects.create(user=request.user, post=post)
 
-    return redirect("post_detail", post_id=post.id)  # Ya jahan bhi redirect karna ho
+    return redirect("post_detail", post_id=post.id)
 
 
 @login_required
@@ -840,19 +831,8 @@ def saved_jobs(request):
     return render(request, "accounts/saved_jobs.html", {"saved_jobs": saved_jobs})
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import SavedPost
-
-
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from .models import SavedPost
-
-
 @login_required
 def saved_posts_list(request):
-    # Sirf logged-in user ke saved posts filter karein
     saved_posts = SavedPost.objects.filter(user=request.user).order_by("-created_at")
 
     context = {"saved_posts": saved_posts}
@@ -860,9 +840,7 @@ def saved_posts_list(request):
 
 
 import google.generativeai as genai
-from django.core.mail import send_mail
 from django.conf import settings
-from django.http import JsonResponse
 
 # Gemini configure karein
 genai.configure(api_key=settings.GEMINI_API_KEY)
@@ -873,7 +851,6 @@ genai.configure(api_key=settings.GEMINI_API_KEY)
 def apply_job(request, job_id):
     job = get_object_or_404(Job, id=job_id, is_approved=True, is_active=True)
 
-    # Check if already applied
     already_applied = Application.objects.filter(
         job=job, applicant=request.user
     ).exists()
@@ -892,10 +869,8 @@ def apply_job(request, job_id):
         if resume_id:
             resume = get_object_or_404(Resume, id=resume_id, profile__user=request.user)
 
-        # 1. ATS Score Calculation (Yahan aap apna logic ya mock score set kar sakte hain)
-        ats_score = 75.0  # Example ATS Score
+        ats_score = 75.0
 
-        # 2. Threshold set karein (e.g., 60% se upar hone par 'selected', nahi toh 'rejected')
         THRESHOLD = 60.0
         if ats_score >= THRESHOLD:
             app_status = "selected"
@@ -914,7 +889,6 @@ def apply_job(request, job_id):
                 "Best regards,\nSmartJobs Team"
             )
 
-        # 3. Application save karein database mein
         Application.objects.create(
             job=job,
             applicant=request.user,
@@ -923,7 +897,6 @@ def apply_job(request, job_id):
             status=app_status,
         )
 
-        # 4. User ko Email bhejna
         try:
             send_mail(
                 subject=email_subject,
@@ -965,7 +938,6 @@ def generate_ai_cover_letter(request, job_id):
             else "General Skills"
         )
 
-        # Prompt jo AI ko 100% human-like aur natural likhne ke liye force karega
         prompt = f"""
         Act as a professional human job applicant writing an email/cover letter. Write a short, natural, and engaging cover letter for the following job.
         
@@ -1086,7 +1058,6 @@ def toggle_like(request, post_id):
     else:
         PostLike.objects.create(user=request.user, post=post)
         if post.author != request.user:
-            # 🟢 UPDATED: Using 'user' and 'title' instead of 'recipient'
             Notification.objects.create(
                 user=post.author,
                 sender=request.user,
@@ -1112,7 +1083,6 @@ def add_comment(request, post_id):
             PostComment.objects.create(user=request.user, post=post, content=content)
 
             if post.author != request.user:
-                # 🟢 UPDATED
                 Notification.objects.create(
                     user=post.author,
                     sender=request.user,
@@ -1136,7 +1106,6 @@ def add_reply(request, comment_id):
             )
 
             if parent_comment.user != request.user:
-                # 🟢 UPDATED
                 Notification.objects.create(
                     user=parent_comment.user,
                     sender=request.user,
@@ -1162,7 +1131,6 @@ def toggle_repost(request, post_id):
         Repost.objects.create(user=request.user, post=post)
 
         if post.author != request.user:
-            # 🟢 UPDATED
             Notification.objects.create(
                 user=post.author,
                 sender=request.user,
@@ -1180,18 +1148,6 @@ def toggle_repost(request, post_id):
         )
 
     return redirect("accounts:dashboard")
-
-
-# accounts/views.py में यह अपडेट करें
-
-
-@login_required
-def saved_posts_list(request):
-    # Yahan 'user=request.user' hona zaroori hai taaki sirf usi user ki posts dikhein jo logged-in hai
-    saved_posts = SavedPost.objects.filter(user=request.user).select_related("post")
-
-    context = {"saved_posts": saved_posts}
-    return render(request, "accounts/saved_posts.html", context)
 
 
 @login_required
@@ -1368,7 +1324,6 @@ def toggle_follow(request, user_id):
         ).delete()
     else:
         Follow.objects.create(follower=request.user, following=target_user)
-        # 🟢 UPDATED
         Notification.objects.create(
             user=target_user,
             sender=request.user,
@@ -1393,7 +1348,6 @@ def send_connection(request, user_id):
 
     Connection.objects.create(sender=request.user, receiver=receiver, status="pending")
 
-    # 🟢 UPDATED
     Notification.objects.create(
         user=receiver,
         sender=request.user,
@@ -1413,7 +1367,6 @@ def accept_connection(request, connection_id):
     connection.status = "accepted"
     connection.save()
 
-    # 🟢 UPDATED
     Notification.objects.create(
         user=connection.sender,
         sender=request.user,

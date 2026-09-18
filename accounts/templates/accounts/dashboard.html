@@ -429,18 +429,16 @@
     }
 
     .scrollable-menu {
-        max-height: 280px; /* Adjust height as needed */
+        max-height: 280px;
         overflow-y: auto;
         padding-right: 4px;
         display: flex;
         flex-direction: column;
         gap: 2px;
-        /* Standard Scrollbar Styling */
         scrollbar-width: thin;
         scrollbar-color: #c1c1c1 #f1f1f1;
     }
 
-    /* Webkit Scrollbar Styling (Chrome, Safari, Edge) */
     .scrollable-menu::-webkit-scrollbar {
         width: 6px;
     }
@@ -519,14 +517,11 @@
     .link-btn:hover { text-decoration: underline; }
     .empty-feed { padding: 30px; text-align: center; color: var(--text-muted); }
 
+    /* RESPONSIVE OPTIMIZATION */
     @media (max-width: 992px) { 
-        .home-layout { grid-template-columns: 220px 1fr; } 
+        .home-layout { grid-template-columns: 1fr; } 
+        .left-sidebar { display: none !important; } /* Mobile/Tablet par left sidebar ko hide kar diya hai taaki duplication khatam ho jaye */
         .right-sidebar { display: none; } 
-    }
-    @media (max-width: 688px) { 
-        .home-layout { display: block; } 
-        .left-sidebar { position: static; } 
-        .scrollable-menu { max-height: none; overflow-y: visible; } 
     }
 </style>
 {% endblock %}
